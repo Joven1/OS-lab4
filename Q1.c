@@ -1,7 +1,14 @@
+//I added this file to make it easier to see on vim
+//I still have no idea what I'm doing
+
+Description:
+Implement dynamic one-level paging in DLXOS. All your code should go in the one-level/ directory. 
+
+You will need to write code in process.c, memory.c, process.h, memory.h, and memory_constants.h. 
+
+Your implementation must abide by the following specifications:
+
 TODO:
-
-Use a page size of 4KB (note that 4KB is not exactly 4,000 bytes).
-
 Use a virtual memory size of 1024KB (note that 1024KB is not exactly 1,024,000 bytes).
 
 Use a maximum physical memory size of 2MB (again, 2MB is not exactly 2,000,000 bytes).
