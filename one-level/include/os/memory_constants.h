@@ -18,6 +18,28 @@
 // Be sure to prepend any constant names with "MEM_" so 
 // that the grader knows they are defined in this file.
 
+//Bit Position of LSB in Virtual Address
+#define MEM_L1FIELD_FIRST_BITNUM 12
+
+//Max Virtual Address (Size is 1024 KB -> 1048576 Bytes)
+#define MAX_VIRTUAL_ADDRESS 1048576
+
+//Mem Max Size (Size is 2MB -> 2097152 Bytes)
+#define MEM_MAX_SIZE 2097152
+
+//Copied from Lab 4
+#define MEMORY_PTE_READONLY 0x4
+#define MEMORY_PTE_DIRTY 0x2 
+#define MEMORY_PTE_VALID 0x1
+
+
+//Computable Results
+
+#define MEM_PAGESIZE (0x1 << MEM_L1FIELD_FIRST_BITNUM)
+#define MEM_L1_PAGETABLE_SIZE ((MEM_MAX_VIRTUAL_ADDRESS + 1) >> MEM_L1FIELD_FIRST_BITNUM) 
+#define MEM_PAGE_MASK_OFFSET (MEM_PAGESIZE - 1)
+#define MEM_MASK_PTE_TO_PAGE_ADDRESS (~(MEM_PTE_READONLY | MEM_PTE_DIRTY | MEM_PTE_VALID)) 
+
 //--------------------------------------------------------
 
 
