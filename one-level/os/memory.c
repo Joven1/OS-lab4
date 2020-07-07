@@ -68,6 +68,8 @@ void MemoryModuleInit() {
 //
 //----------------------------------------------------------------------
 uint32 MemoryTranslateUserToSystem (PCB *pcb, uint32 addr) {
+	//TODO: Implement
+	return 0;
 }
 
 
@@ -188,5 +190,19 @@ uint32 MemorySetupPte (uint32 page) {
 
 
 void MemoryFreePage(uint32 page) {
+}
+
+int mfree(PCB* pcb, void* ptr) {
+  return -1;
+}
+
+
+
+//Define Malloc and Mfree for compilation
+
+
+void * malloc(PCB * pcb, int memsize)
+{
+	return NULL;
 }
 
