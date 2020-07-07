@@ -66,7 +66,7 @@ uint32 get_argument(char *string);
 //----------------------------------------------------------------------
 void ProcessModuleInit () {
   int		i;
-
+  int j;
   dbprintf ('p', "Entering ProcessModuleInit\n");
   AQueueInit (&freepcbs);
   AQueueInit (&runQueue);
@@ -86,6 +86,12 @@ void ProcessModuleInit () {
     //-------------------------------------------------------
     // STUDENT: Initialize the PCB's page table here.
     //-------------------------------------------------------
+	pcbs[i].npages = 0; //Each Process starts with zero pages allocated to it
+ 	for(j = 0; j < MEM_L1_PAGETABLE_SIZE; j++) //Initialize all page tables to zero for process
+	{
+		pcbs[i].pagetable[j] = 0;
+	}
+
 
     // Finally, insert the link into the queue
     if (AQueueInsertFirst(&freepcbs, pcbs[i].l) != QUEUE_SUCCESS) {
