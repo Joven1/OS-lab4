@@ -61,18 +61,18 @@ void MemoryModuleInit()
 
 	int i,j;
 	uint32 mask;
-	uint32 os_pages = (lastosaddress >> MEM_L1FIELD_FIRST_BITNUM);
-	if((os_pages % MEM_PAGESIZE) != 0)
+	uint32 os_pages = (lastosaddress >> MEM_L1FIELD_FIRST_BITNUM); //Calculate number of pages occupied by operating system
+	if((os_pages % MEM_PAGESIZE) != 0) //Incase of rounding error, round up
 	{
 		os_pages++;
 	}
 
 	printf("\n\nMemory Module Init\n\n");
 
-	for(i = 0; i < (MEM_MAX_SIZE/MEM_PAGESIZE)/32; i++)
+	for(i = 0; i < freemap_size; i++) //Loop through number of indices in the free map
 	{
-		freemap[i] = 0;
-		mask = 0x1;
+		freemap[i] = 0; //Set garbage value as zero
+		mask = 0x1; //Mask for setting the bits
 		for(j = 0; j < 32; j++)	
 		{
 			//For each amount of OS_PAGES used, mark as a 0 (not in use) and mark the rest as 1 (in use)
@@ -83,7 +83,7 @@ void MemoryModuleInit()
 			}
 			else 
 			{
-				os_pages = os_pages - 1;
+				os_pages = os_pages - 1; //Keep on subtracting pages occupied by OS 
 				mask = mask << 1;
 			}
 		}
@@ -100,26 +100,26 @@ void MemoryModuleInit()
 //	into an OS (physical) address.  Return the physical address.
 //
 //----------------------------------------------------------------------
-uint32 MemoryTranslateUserToSystem (PCB *pcb, uint32 addr) {
-	//TODO: Implement
-	uint32 page_offset;
-	uint32 page_number;
-	uint32 pte; //Page Table Entry
-	uint32 physical_address; //physical address to return
+uint32 MemoryTranslateUserToSystem (PCB *pcb, uint32 addr) 
+{
+	uint32 page_offset; //Lower Part of Address
+	uint32 page_number; //Upper Part of Address
+	uint32 pte; //Page Table Entry (Value stored in page Table)
+	uint32 physical_address; //OS (physical) Address
 
-	page_number = addr >> MEM_L1FIELD_FIRST_BITNUM; //Bits before last bits is the page number
+	page_number = addr >> MEM_L1FIELD_FIRST_BITNUM; //Extract Page_ Number by right shifting the virtual address
 	page_offset = addr & 0xFFF; //Last 12 Bits is Offset
+	
 	pte = pcb->pagetable[page_number]; //obtain entry from page table 
 
 	if((pte & MEM_PTE_VALID) == 0) //Entry is not a valid physical page, throw page fault exception
 	{
 		return MemoryPageFaultHandler(pcb);
 	}
+	
 	//TODO: see if this actually works	
 	physical_address = pte & MEM_MASK_PTE_TO_PAGE_ADDRESS; //Mask wit hmask to convert from PTE to a page address
-	physical_address = physical_address | page_offset; //calculate the actual physical address
-
-	
+	physical_address = physical_address | page_offset; //calculate the actual physical address	
 
 	return physical_address; //return address
 }

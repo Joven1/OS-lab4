@@ -143,7 +143,18 @@ void ProcessFreeResources (PCB *pcb) {
   //------------------------------------------------------------
   // STUDENT: Free any memory resources on process death here.
   //------------------------------------------------------------
-
+	//TODO: check if this works
+	for(i = 0; i < MEM_L1_PAGETABLE_SIZE; i++)//Loop through the page tables and free them all
+	{
+		if(pcb->pagetable[i] & MEM_PTE_VALID)
+		{
+			pcb->pagetable[i] ^= MEM_PTE_VALID;
+			MemoryFreePage(pcb->pagetable[i]);
+		}
+	}
+	pcb->npages = 0;
+	MemoryFreePage(pcb->sysStackArea/MEM_PAGESIZE);
+	pcb->sysStackArea = 0;
 
   ProcessSetStatus (pcb, PROCESS_STATUS_FREE);
 }
