@@ -267,8 +267,11 @@ L16:
 	addi	r1,r0,#0
 	sw	-12(r30),r1
 L17:
-	lw	r1,-12(r30)
-	slei	r2,r1,#15
+	lhi	r1,((_freemap_size)>>16)&0xffff
+	addui	r1,r1,(_freemap_size)&0xffff
+	lw	r2,-12(r30)
+	lw	r1,(r1)
+	sltu	r2,r2,r1
 	bnez	r2,L20
 	nop	; delay slot nop
 	j	L18
@@ -613,19 +616,110 @@ L38:
 	jr	r31
 	nop
 .endproc _MemoryCopyUserToSystem
+.data
+	.align 2
+LC1:
+	.ascii "ERROR: Memory cannot be allocated\n\000"
+	.align 2
+LC2:
+	.ascii "Segmentation fault (core dumped)\n\000"
+.text
 	.align 2
 .proc _MemoryPageFaultHandler
 .global _MemoryPageFaultHandler
 _MemoryPageFaultHandler:
-;  Function 'MemoryPageFaultHandler'; 0 bytes of locals, 0 regs to save.
+;  Function 'MemoryPageFaultHandler'; 16 bytes of locals, 4 regs to save.
 	sw	-4(r29),r30	; push fp
 	add	r30,r0,r29	; fp = sp
 	sw	-8(r29),r31	; push ret addr
-	subui	r29,r29,#8	; alloc local storage
+	subui	r29,r29,#40	; alloc local storage
+	sw	0(r29),r2
+	sw	4(r29),r3
+	sw	8(r29),r4
+	sw	12(r29),r5
+	lw	r1,(r30)
+	lw	r2,(r1)
+	addi	r1,r2,#308
+	lw	r2,(r1)
+	sw	-12(r30),r2
+	lw	r1,(r30)
+	lw	r2,(r1)
+	addi	r1,r2,#156
+	lw	r2,(r1)
+	addi	r5,r0,#-8
+	and	r1,r2,r5
+	sw	-16(r30),r1
+	lw	r1,-12(r30)
+	srli	r2,r1,#0xc
+	sw	-24(r30),r2
+	lw	r1,-12(r30)
+	lw	r2,-16(r30)
+	sgeu	r1,r1,r2
+	beqz	r1,L40
+	nop	; delay slot nop
+	add	r2,r0,r29
+	jal	_MemoryAllocPage
+	nop	; delay slot nop
+	sw	-20(r30),r1
+	lw	r1,-20(r30)
+	seqi	r2,r1,#-1
+	beqz	r2,L41
+	nop	; delay slot nop
+	addi	r29,r29,#-8
+	add	r1,r0,r29
+	lhi	r2,((LC1)>>16)&0xffff
+	addui	r2,r2,(LC1)&0xffff
+	sw	(r1),r2
+	jal	_printf
+	nop	; delay slot nop
+	addi	r29,r29,#8
+	add	r2,r0,r29
+	jal	_exitsim
+	nop	; delay slot nop
+L41:
+	addi	r29,r29,#-8
+	add	r1,r0,r29
+	lw	r2,-20(r30)
+	sw	(r1),r2
+	jal	_MemorySetupPte
+	nop	; delay slot nop
+	addi	r29,r29,#8
+	lw	r2,(r30)
+	lw	r3,-24(r30)
+	addi	r4,r0,#4
+	movi2fp	f0,r3
+	movi2fp	f1,r4
+	mult	f0,f0,f1
+	movfp2i	r3,f0
+	add	r2,r3,r2
+	addi	r3,r2,#96
+	sw	(r3),r1
+	addi	r1,r0,#1
+	j	L39
+	nop	; delay slot nop
+	j	L42
+	nop	; delay slot nop
+L40:
+	addi	r29,r29,#-8
+	add	r1,r0,r29
+	lhi	r2,((LC2)>>16)&0xffff
+	addui	r2,r2,(LC2)&0xffff
+	sw	(r1),r2
+	jal	_printf
+	nop	; delay slot nop
+	addi	r29,r29,#8
+	add	r2,r0,r29
+	jal	_ProcessKill
+	nop	; delay slot nop
 	addi	r1,r0,#-1
 	j	L39
 	nop	; delay slot nop
+L42:
 L39:
+	lw	r2,0(r29)
+	lw	r3,4(r29)
+	lw	r4,8(r29)
+	lw	r5,12(r29)
 	lw	r31,-8(r30)
 	add	r29,r0,r30
 	lw	r30,-4(r30)
@@ -646,17 +740,17 @@ _MemoryAllocPage:
 	nop
 	addi	r1,r0,#0
 	sw	-12(r30),r1
-L41:
+L44:
 	lhi	r1,((_freemap_size)>>16)&0xffff
 	addui	r1,r1,(_freemap_size)&0xffff
 	lw	r2,-12(r30)
 	lw	r1,(r1)
 	sltu	r2,r2,r1
-	bnez	r2,L44
+	bnez	r2,L47
 	nop	; delay slot nop
-	j	L42
+	j	L45
 	nop	; delay slot nop
-L44:
+L47:
 	addi	r1,r0,#1
 	sw	-20(r30),r1
 	lw	r1,-12(r30)
@@ -670,18 +764,18 @@ L44:
 	add	r2,r1,r31
 	lw	r1,(r2)
 	snei	r2,r1,#0
-	beqz	r2,L43
+	beqz	r2,L46
 	nop	; delay slot nop
 	addi	r1,r0,#0
 	sw	-16(r30),r1
-L46:
+L49:
 	lw	r1,-16(r30)
 	slei	r2,r1,#31
-	bnez	r2,L49
+	bnez	r2,L52
 	nop	; delay slot nop
-	j	L43
+	j	L46
 	nop	; delay slot nop
-L49:
+L52:
 	lw	r1,-12(r30)
 	addi	r2,r0,#4
 	movi2fp	f0,r1
@@ -697,7 +791,7 @@ L49:
 	sw	-28(r30),r1
 	lw	r1,-28(r30)
 	snei	r2,r1,#0
-	beqz	r2,L50
+	beqz	r2,L53
 	nop	; delay slot nop
 	lw	r1,-12(r30)
 	addi	r3,r0,#4
@@ -727,34 +821,37 @@ L49:
 	lw	r2,-16(r30)
 	add	r1,r1,r2
 	sw	-24(r30),r1
-	j	L48
+	lw	r1,-24(r30)
+	j	L43
 	nop	; delay slot nop
-L50:
+	j	L54
+	nop	; delay slot nop
+L53:
 	lw	r1,-20(r30)
 	slli	r2,r1,#0x1
 	sw	-20(r30),r2
+L54:
 L51:
-L48:
 	lw	r2,-16(r30)
 	addi	r1,r2,#1
 	add	r2,r0,r1
 	sw	-16(r30),r2
-	j	L46
+	j	L49
 	nop	; delay slot nop
-L47:
-L45:
-L43:
+L50:
+L48:
+L46:
 	lw	r2,-12(r30)
 	addi	r1,r2,#1
 	add	r2,r0,r1
 	sw	-12(r30),r2
-	j	L41
+	j	L44
 	nop	; delay slot nop
-L42:
+L45:
 	addi	r1,r0,#-1
-	j	L40
+	j	L43
 	nop	; delay slot nop
-L40:
+L43:
 	lw	r2,0(r29)
 	lw	r3,4(r29)
 	lw	r31,-8(r30)
@@ -780,9 +877,9 @@ _MemorySetupPte:
 	ori	r2,r1,#1
 	sw	-12(r30),r2
 	lw	r1,-12(r30)
-	j	L52
+	j	L55
 	nop	; delay slot nop
-L52:
+L55:
 	lw	r2,0(r29)
 	lw	r31,-8(r30)
 	add	r29,r0,r30
@@ -850,9 +947,9 @@ _MemoryFreePage:
 	addi	r2,r3,#1
 	add	r3,r0,r2
 	sw	(r1),r3
-	j	L53
+	j	L56
 	nop	; delay slot nop
-L53:
+L56:
 	lw	r2,0(r29)
 	lw	r3,4(r29)
 	lw	r31,-8(r30)
@@ -871,9 +968,9 @@ _mfree:
 	sw	-8(r29),r31	; push ret addr
 	subui	r29,r29,#8	; alloc local storage
 	addi	r1,r0,#-1
-	j	L54
+	j	L57
 	nop	; delay slot nop
-L54:
+L57:
 	lw	r31,-8(r30)
 	add	r29,r0,r30
 	lw	r30,-4(r30)
@@ -890,9 +987,9 @@ _malloc:
 	sw	-8(r29),r31	; push ret addr
 	subui	r29,r29,#8	; alloc local storage
 	addi	r1,r0,#0
-	j	L55
+	j	L58
 	nop	; delay slot nop
-L55:
+L58:
 	lw	r31,-8(r30)
 	add	r29,r0,r30
 	lw	r30,-4(r30)

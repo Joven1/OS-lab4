@@ -117,9 +117,8 @@ uint32 MemoryTranslateUserToSystem (PCB *pcb, uint32 addr)
 		return MemoryPageFaultHandler(pcb);
 	}
 	
-	//TODO: see if this actually works	
-	physical_address = pte & MEM_MASK_PTE_TO_PAGE_ADDRESS; //Mask wit hmask to convert from PTE to a page address
-	physical_address = physical_address | page_offset; //calculate the actual physical address	
+	physical_address = pte & MEM_MASK_PTE_TO_PAGE_ADDRESS; //Convert from PTE to a page address
+	physical_address = physical_address | page_offset; //Get the actual physical address with the page offset	
 
 	return physical_address; //return address
 }
@@ -221,8 +220,36 @@ int MemoryCopyUserToSystem (PCB *pcb, unsigned char *from,unsigned char *to, int
 // Note: The existing code is incomplete and only for reference. 
 // Feel free to edit.
 //---------------------------------------------------------------------
-int MemoryPageFaultHandler(PCB *pcb) {
-  return MEM_FAIL;
+int MemoryPageFaultHandler(PCB *pcb) 
+{
+	//Obtain the Page Fault Address and Userstack Address by 
+	uint32 page_fault_addr = pcb->currentSavedFrame[PROCESS_STACK_FAULT];
+	uint32 userstack_addr = pcb->currentSavedFrame[PROCESS_STACK_USER_STACKPOINTER] & MEM_MASK_PTE_TO_PAGE_ADDRESS;
+	
+	//New Page incase allocation is needed
+	uint32 new_page;
+	uint32 page_number = page_fault_addr >> MEM_L1FIELD_FIRST_BITNUM;
+	
+	if(page_fault_addr >= userstack_addr) //If the fault address is greater than or equal to stack pointer
+	{
+		//Allocate a New Page for process
+		new_page = MemoryAllocPage();
+		if(new_page == MEM_FAIL)
+		{
+			printf("ERROR: Memory cannot be allocated\n");
+			exitsim();
+		}
+		pcb->pagetable[page_number] = MemorySetupPte(new_page);
+		
+		return MEM_SUCCESS;
+	}
+	else
+	{
+		printf("Segmentation fault (core dumped)\n");
+		ProcessKill();
+  		return MEM_FAIL;
+	}
+		
 }
 
 
@@ -250,7 +277,8 @@ int MemoryAllocPage(void)
 				if(check_val_and > 0)
 				{
 					freemap[i] = freemap[i] ^ mask;
-					return_value = (i*32) + j;
+					return_value = (i*32) + j; //Page is number of entries looped + jth available entry
+					return return_value;
 				}
 				else 
 				{
@@ -273,17 +301,23 @@ uint32 MemorySetupPte (uint32 page)
 }
 
 
+//Sets Free Map entry as 1 as in "not in use"
 void MemoryFreePage(uint32 page) 
 {
 	uint32 freemap_index;
 	uint32 index_bit_position;
 	uint32 mask;
-	page = page & MEM_MASK_PTE_TO_PAGE_ADDRESS; //Mask status bits
+	
+	page = page & MEM_MASK_PTE_TO_PAGE_ADDRESS; //Mask status bits to get page number
 	page = page >> MEM_L1FIELD_FIRST_BITNUM; //Get page
+	
 	freemap_index = page/32;
 	index_bit_position = page % 32;
+	
 	mask = 0x1 << index_bit_position; //From the index bit position, shift the 1 to set
+	
 	freemap[freemap_index] = freemap[freemap_index] ^ mask; //Set the bit 
+	
 	nfreepages++; //number of free pages increases
 	return;
 	
