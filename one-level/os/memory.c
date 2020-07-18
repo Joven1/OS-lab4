@@ -12,7 +12,8 @@
 #include "queue.h"
 
 // num_pages = size_of_memory / size_of_one_page
-static uint32 freemap[/*size*/];
+static uint32 freemap_size = (MEM_MAX_SIZE/MEM_PAGESIZE)/32;
+static uint32 freemap[(MEM_MAX_SIZE/MEM_PAGESIZE)/32]; //Max amount of memory divided by 32 since each bit in the uint32 says 1 = free 0 = not free
 static uint32 pagestart;
 static int nfreepages;
 static int freemapmax;
@@ -55,7 +56,39 @@ int MemoryGetSize() {
 //      all the rest as not in use.
 //
 //----------------------------------------------------------------------
-void MemoryModuleInit() {
+void MemoryModuleInit() 
+{
+
+	int i,j;
+	uint32 mask;
+	uint32 os_pages = (lastosaddress >> MEM_L1FIELD_FIRST_BITNUM);
+	if((os_pages % MEM_PAGESIZE) != 0)
+	{
+		os_pages++;
+	}
+
+	printf("\n\nMemory Module Init\n\n");
+
+	for(i = 0; i < (MEM_MAX_SIZE/MEM_PAGESIZE)/32; i++)
+	{
+		freemap[i] = 0;
+		mask = 0x1;
+		for(j = 0; j < 32; j++)	
+		{
+			//For each amount of OS_PAGES used, mark as a 0 (not in use) and mark the rest as 1 (in use)
+			if(os_pages == 0)
+			{
+				freemap[i] = freemap[i] | mask;
+				mask = mask << 1;
+			}
+			else 
+			{
+				os_pages = os_pages - 1;
+				mask = mask << 1;
+			}
+		}
+		
+	}
 }
 
 
@@ -69,7 +102,26 @@ void MemoryModuleInit() {
 //----------------------------------------------------------------------
 uint32 MemoryTranslateUserToSystem (PCB *pcb, uint32 addr) {
 	//TODO: Implement
-	return 0;
+	uint32 page_offset;
+	uint32 page_number;
+	uint32 pte; //Page Table Entry
+	uint32 physical_address; //physical address to return
+
+	page_number = addr >> MEM_L1FIELD_FIRST_BITNUM; //Bits before last bits is the page number
+	page_offset = addr & 0xFFF; //Last 12 Bits is Offset
+	pte = pcb->pagetable[page_number]; //obtain entry from page table 
+
+	if((pte & MEM_PTE_VALID) == 0) //Entry is not a valid physical page, throw page fault exception
+	{
+		return MemoryPageFaultHandler(pcb);
+	}
+	//TODO: see if this actually works	
+	physical_address = pte & MEM_MASK_PTE_TO_PAGE_ADDRESS; //Mask wit hmask to convert from PTE to a page address
+	physical_address = physical_address | page_offset; //calculate the actual physical address
+
+	
+
+	return physical_address; //return address
 }
 
 
@@ -179,17 +231,62 @@ int MemoryPageFaultHandler(PCB *pcb) {
 // Feel free to edit/remove them
 //---------------------------------------------------------------------
 
-int MemoryAllocPage(void) {
-  return -1;
+int MemoryAllocPage(void) 
+{
+	//Loop Variables
+	int i, j;
+	uint32 mask;
+	int return_value;
+	uint32 check_val_and;
+
+	for(i = 0; i < freemap_size; i++) //Loop through the freemap
+	{
+		mask = 0x1;
+		if(freemap[i] != 0) //Found a non zero entry available
+		{
+			for(j = 0; j < 32; j++)
+			{
+				check_val_and = freemap[i] & mask;
+				if(check_val_and > 0)
+				{
+					freemap[i] = freemap[i] ^ mask;
+					return_value = (i*32) + j;
+				}
+				else 
+				{
+					//Check next bits then move mask
+					mask = mask << 1;
+				}
+			}
+		}
+	} 
+	return MEM_FAIL; //No Pages are available
 }
 
 
-uint32 MemorySetupPte (uint32 page) {
-  return -1;
+uint32 MemorySetupPte (uint32 page) 
+{
+	uint32 pte;
+	pte = page << MEM_L1FIELD_FIRST_BITNUM; //Left shift the page number 
+	pte = pte | MEM_PTE_VALID; //Set unit as valid  
+	return pte;
 }
 
 
-void MemoryFreePage(uint32 page) {
+void MemoryFreePage(uint32 page) 
+{
+	uint32 freemap_index;
+	uint32 index_bit_position;
+	uint32 mask;
+	page = page & MEM_MASK_PTE_TO_PAGE_ADDRESS; //Mask status bits
+	page = page >> MEM_L1FIELD_FIRST_BITNUM; //Get page
+	freemap_index = page/32;
+	index_bit_position = page % 32;
+	mask = 0x1 << index_bit_position; //From the index bit position, shift the 1 to set
+	freemap[freemap_index] = freemap[freemap_index] ^ mask; //Set the bit 
+	nfreepages++; //number of free pages increases
+	return;
+	
 }
 
 int mfree(PCB* pcb, void* ptr) {

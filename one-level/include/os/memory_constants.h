@@ -28,9 +28,9 @@
 #define MEM_MAX_SIZE 2097152
 
 //Copied from Lab 4
-#define MEMORY_PTE_READONLY 0x4
-#define MEMORY_PTE_DIRTY 0x2 
-#define MEMORY_PTE_VALID 0x1
+#define MEM_PTE_READONLY 0x4
+#define MEM_PTE_DIRTY 0x2 
+#define MEM_PTE_VALID 0x1
 
 
 //Computable Results
