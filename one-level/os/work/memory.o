@@ -364,8 +364,8 @@ _MemoryTranslateUserToSystem:
 	sw	4(r29),r3
 	sw	8(r29),r4
 	lw	r1,4(r30)
-	lhi	r2,#16
-	addui	r2,r2,#0
+	lhi	r2,#15
+	addui	r2,r2,#65535
 	sgtu	r1,r1,r2
 	beqz	r1,L28
 	nop	; delay slot nop

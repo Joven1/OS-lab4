@@ -22,7 +22,7 @@
 #define MEM_L1FIELD_FIRST_BITNUM 12
 
 //Max Virtual Address (Size is 1024 KB -> 1048576 Bytes)
-#define MEM_MAX_VIRTUAL_ADDRESS 1048576
+#define MEM_MAX_VIRTUAL_ADDRESS 1048575
 
 //Mem Max Size (Size is 2MB -> 2097152 Bytes)
 #define MEM_MAX_SIZE 2097152

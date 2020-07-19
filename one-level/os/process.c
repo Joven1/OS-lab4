@@ -481,10 +481,9 @@ int ProcessFork (VoidFunc func, uint32 param, char *name, int isUser) {
 	}
 	else
 	{
-		stackframe = ((uint32 *)(page * MEM_PAGESIZE  + MEM_PAGESIZE - 4));
-		pcb->sysStackArea = page * MEM_PAGESIZE;
-		pcb->npages++;
-		printf("\n\n%X\n",pcb->sysStackArea);	
+		stackframe = ((uint32 *)(page * MEM_PAGESIZE  + MEM_PAGESIZE - 4)); //Set Stackframe
+		pcb->sysStackArea = page * MEM_PAGESIZE; //Area of page
+		pcb->npages++; //Increment number of pcb pages
 	}
 
   // Now that the stack frame points at the bottom of the system stack memory area, we need to
