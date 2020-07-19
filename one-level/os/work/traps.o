@@ -1972,7 +1972,7 @@ LC22:
 	.ascii "Exiting after illegal access at iar=0x%x, isr=0x%x\n\000"
 	.align 2
 LC23:
-	.ascii "Eting after illegal address at iar=0x%x, isr=0x%x\n\000"
+	.ascii "Exiting after illegal address at iar=0x%x, isr=0x%x\n\000"
 	.align 2
 LC24:
 	.ascii "Exiting after illegal instruction at iar=0x%x, isr=0x%x\n\000"

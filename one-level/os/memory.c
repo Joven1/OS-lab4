@@ -58,7 +58,7 @@ int MemoryGetSize() {
 //----------------------------------------------------------------------
 void MemoryModuleInit() 
 {
-
+	
 	int i,j;
 	uint32 mask;
 	uint32 os_pages = (lastosaddress >> MEM_L1FIELD_FIRST_BITNUM); //Calculate number of pages occupied by operating system
@@ -101,16 +101,22 @@ void MemoryModuleInit()
 //----------------------------------------------------------------------
 uint32 MemoryTranslateUserToSystem (PCB *pcb, uint32 addr) 
 {
+	
 	uint32 page_offset; //Lower Part of Address
 	uint32 page_number; //Upper Part of Address
 	uint32 pte; //Page Table Entry (Value stored in page Table)
 	uint32 physical_address; //OS (physical) Address
 
+	if( addr > MEM_MAX_VIRTUAL_ADDRESS)
+	{
+		ProcessKill();
+	}
 	page_number = addr >> MEM_L1FIELD_FIRST_BITNUM; //Extract Page_ Number by right shifting the virtual address
 	page_offset = addr & 0xFFF; //Last 12 Bits is Offset
 	
 	pte = pcb->pagetable[page_number]; //obtain entry from page table 
 
+	
 	if((pte & MEM_PTE_VALID) == 0) //Entry is not a valid physical page, throw page fault exception
 	{
 		return MemoryPageFaultHandler(pcb);
@@ -286,13 +292,15 @@ int MemoryAllocPage(void)
 				}
 			}
 		}
-	} 
+	}
+	 
 	return MEM_FAIL; //No Pages are available
 }
 
 
 uint32 MemorySetupPte (uint32 page) 
 {
+
 	uint32 pte;
 	pte = page << MEM_L1FIELD_FIRST_BITNUM; //Left shift the page number 
 	pte = pte | MEM_PTE_VALID; //Set unit as valid  
@@ -307,7 +315,6 @@ void MemoryFreePage(uint32 page)
 	uint32 index_bit_position;
 	uint32 mask;
 	
-	printf("\n\n\nMADE IT HERE\n\n\n");
 	page = page & MEM_MASK_PTE_TO_PAGE_ADDRESS; //Mask status bits to get page number
 	page = page >> MEM_L1FIELD_FIRST_BITNUM; //Get page
 	
@@ -326,11 +333,6 @@ void MemoryFreePage(uint32 page)
 int mfree(PCB* pcb, void* ptr) {
   return -1;
 }
-
-
-
-//Define Malloc and Mfree for compilation
-
 
 void * malloc(PCB * pcb, int memsize)
 {
