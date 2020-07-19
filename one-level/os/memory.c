@@ -67,7 +67,6 @@ void MemoryModuleInit()
 		os_pages++;
 	}
 
-	printf("\n\nMemory Module Init\n\n");
 
 	for(i = 0; i < freemap_size; i++) //Loop through number of indices in the free map
 	{
@@ -308,6 +307,7 @@ void MemoryFreePage(uint32 page)
 	uint32 index_bit_position;
 	uint32 mask;
 	
+	printf("\n\n\nMADE IT HERE\n\n\n");
 	page = page & MEM_MASK_PTE_TO_PAGE_ADDRESS; //Mask status bits to get page number
 	page = page >> MEM_L1FIELD_FIRST_BITNUM; //Get page
 	

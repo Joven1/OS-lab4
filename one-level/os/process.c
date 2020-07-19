@@ -477,6 +477,7 @@ int ProcessFork (VoidFunc func, uint32 param, char *name, int isUser) {
 		//Exit if allocation failed
 		printf("Error: Page Cannot Be Allocated\n");
 		exitsim(); 
+
 	}
 	else
 	{

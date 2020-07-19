@@ -3,7 +3,6 @@
 
 void main (int argc, char *argv[])
 {
-	
   sem_t s_procs_completed; // Semaphore to signal the original process that we're done
 
   if (argc != 2) { 
@@ -24,5 +23,4 @@ void main (int argc, char *argv[])
   }
 
   Printf("hello_world (%d): Done!\n", getpid());
-	
 }
