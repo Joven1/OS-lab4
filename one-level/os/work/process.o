@@ -2342,11 +2342,6 @@ L95:
 	addi	r2,r3,#1
 	add	r3,r0,r2
 	sw	1120(r1),r3
-	lw	r1,-160(r30)
-	lw	r2,-160(r30)
-	lw	r3,8(r2)
-	xori	r2,r3,#1
-	sw	8(r1),r2
 	addi	r29,r29,#-8
 	add	r1,r0,r29
 	lhi	r2,((LC37)>>16)&0xffff
