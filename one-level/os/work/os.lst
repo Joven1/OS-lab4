@@ -6281,11 +6281,11 @@
  5749  00005a4c          	.proc _ProcessFork
  5750  00005a4c          	.global _ProcessFork
  5751  00005a4c          	_ProcessFork:
- 5752                      ;  Function 'ProcessFork'; 232 bytes of locals, 4 regs to save.
+ 5752                      ;  Function 'ProcessFork'; 224 bytes of locals, 4 regs to save.
  5753  00005a4c  afbefffc	sw	-4(r29),r30; push fp
  5754  00005a50  001df020	add	r30,r0,r29; fp = sp
  5755  00005a54  afbffff8	sw	-8(r29),r31; push ret addr
- 5756  00005a58  2fbd0100	subui	r29,r29,#256; alloc local storage
+ 5756  00005a58  2fbd00f8	subui	r29,r29,#248; alloc local storage
  5757  00005a5c  afa20000	sw	0(r29),r2
  5758  00005a60  afa30004	sw	4(r29),r3
  5759  00005a64  afa40008	sw	8(r29),r4

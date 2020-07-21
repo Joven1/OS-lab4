@@ -362,6 +362,116 @@ static void ProcessExit () {
   exit ();
 }
 
+
+
+
+
+
+
+int ProcessRealFork()
+{
+	int i;
+	PCB * parent_process = currentPCB;
+	PCB * child_process;
+	int intrs;
+	uint32 page;
+	uint32 * stackframe;
+
+	//First Check for an open queue
+	//
+	//Ensure it is an atomic operation
+	intrs = DisableIntrs();
+	
+	//Search for Free PCBS 
+	if(AQueueEmpty(&freepcbs))
+	{
+		printf("Error: No Free Processes\n");
+		exitsim();
+	}
+
+	child_process = (PCB *) AQueueObject(AQueueFirst(&freepcbs));
+
+	if(AQueueRemove(&(child_process->l)) != QUEUE_SUCCESS)
+	{
+		printf("Error: Unable to remove link from Queue\n");
+		exitsim();
+	} 
+
+	ProcessSetStatus(child_process, PROCESS_STATUS_RUNNABLE);
+	
+	RestoreIntrs(intrs);
+
+
+	//Loop through all the entries inside the parent process 
+	for(i = 0; i < MEM_L1_PAGETABLE_SIZE; i++)
+	{
+		page = Set_ReadOnly_Bit(parent_process->pagetable[i]); //Set bit in parent process as Read Only
+		if(page != MEM_FAIL) //If the memory setting did not fail
+		{
+			parent_process->pagetable[i] = page;
+			MemorySharePte(parent_process->pagetable[i]);
+		}
+	}
+
+	//Once all of the parent's pages are set as read only copy it into the child process
+	bcopy((char *) parent_process, (char *) child_process, sizeof(PCB));
+
+	//Start a new System Stack
+	page = MemoryAllocPage();
+	child_process->sysStackArea = page * MEM_PAGESIZE;
+	
+	bcopy((char *) parent_process->sysStackArea, (char *)child_process->sysStackArea, MEM_PAGESIZE);
+
+	//Set the stackframe
+	stackframe = ((uint32 *)(page * MEM_PAGESIZE + MEM_PAGESIZE - 4));
+	stackframe -= PROCESS_STACK_FRAME_SIZE;
+	
+	child_process->currentSavedFrame = stackframe;	
+	child_process->sysStackPtr = stackframe;
+  
+
+
+  	//----------------------------------------------------------------------
+  	// STUDENT: setup the PTBASE, PTBITS, and PTSIZE here on the current
+  	// stack frame.
+  	//----------------------------------------------------------------------
+	
+	stackframe[PROCESS_STACK_PTBASE] = (uint32) (&child_process->pagetable[0]) ;//set base address of L1 page table
+	stackframe[PROCESS_STACK_PTSIZE] = MEM_L1_PAGETABLE_SIZE;
+	stackframe[PROCESS_STACK_PTBITS] = MEM_L1FIELD_FIRST_BITNUM << 16 | MEM_L1FIELD_FIRST_BITNUM; //Upper and lower 16 bits equal to each other
+	
+	//When the Exception Occurs, Print Out the Valid Page Table Entries for both the Parent and the Child
+	printf("Parent Process Page Table:\n");
+	PrintPageTable(parent_process);
+
+	printf("Child Process Page Table:\n");
+	PrintPageTable(child_process);
+
+	//End Interrupts
+	intrs = DisableIntrs();	
+	
+	if((child_process->l = AQueueAllocLink(child_process)) == NULL)
+	{
+		printf("Error: PCB cannot be Alloced\n");
+		exitsim();
+	}
+	if(AQueueInsertLast(&runQueue, child_process->l) != QUEUE_SUCCESS)
+	{
+		printf("Error: cannot insert link into runQueue\n");
+		exitsim();
+	}
+	
+	RestoreIntrs(intrs);
+
+	//Return Process number	
+	
+	return (int) (child_process - pcbs);
+}
+
+
+
+
+
 
 //----------------------------------------------------------------------
 //
@@ -397,9 +507,9 @@ int ProcessFork (VoidFunc func, uint32 param, char *name, int isUser) {
   uint32 offset;           // Used in parsing command line argument strings, holds offset (in bytes) from 
                            // beginning of the string to the current argument.
   uint32 initial_user_params_bytes;  // total number of bytes in initial user parameters array
-  
+
   uint32 page;
-  
+
   intrs = DisableIntrs ();
   dbprintf ('I', "Old interrupt value was 0x%x.\n", intrs);
   dbprintf ('p', "Entering ProcessFork args=0x%x 0x%x %s %d\n", (int)func,
