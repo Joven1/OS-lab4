@@ -2081,8 +2081,21 @@ L83:
 	sw	-28(r30),r1
 	lw	r1,-20(r30)
 	lw	r2,-28(r30)
-	add	r3,r0,r2
-	slli	r2,r3,#0xc
+	sw	8(r1),r2
+	addi	r29,r29,#-8
+	add	r1,r0,r29
+	lw	r2,-20(r30)
+	lw	r3,8(r2)
+	sw	(r1),r3
+	jal	_MemorySetupPte
+	nop	; delay slot nop
+	addi	r29,r29,#8
+	lw	r2,-20(r30)
+	sw	8(r2),r1
+	lw	r1,-20(r30)
+	lw	r2,-20(r30)
+	lw	r3,8(r2)
+	xori	r2,r3,#1
 	sw	8(r1),r2
 	addi	r29,r29,#-16
 	add	r1,r0,r29
@@ -2684,16 +2697,28 @@ L104:
 	j	L106
 	nop	; delay slot nop
 L105:
-	lw	r1,-232(r30)
-	add	r2,r0,r1
-	slli	r1,r2,#0xc
-	addi	r2,r1,#4092
-	sw	-156(r30),r2
 	lw	r1,-160(r30)
 	lw	r2,-232(r30)
-	add	r3,r0,r2
-	slli	r2,r3,#0xc
 	sw	8(r1),r2
+	addi	r29,r29,#-8
+	add	r1,r0,r29
+	lw	r2,-160(r30)
+	lw	r3,8(r2)
+	sw	(r1),r3
+	jal	_MemorySetupPte
+	nop	; delay slot nop
+	addi	r29,r29,#8
+	lw	r2,-160(r30)
+	sw	8(r2),r1
+	lw	r1,-160(r30)
+	lw	r2,-160(r30)
+	lw	r3,8(r2)
+	xori	r2,r3,#1
+	sw	8(r1),r2
+	lw	r1,-160(r30)
+	lw	r2,8(r1)
+	addi	r1,r2,#4092
+	sw	-156(r30),r1
 	lw	r2,-160(r30)
 	lw	r1,-160(r30)
 	lw	r2,-160(r30)

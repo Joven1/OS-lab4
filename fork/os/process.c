@@ -416,13 +416,15 @@ int ProcessRealFork()
 	//Once all of the parent's pages are set as read only copy it into the child process
 	bcopy((char *) parent_process, (char *) child_process, sizeof(PCB));
 
-	//Start a new System Stack
 	page = MemoryAllocPage();
-	child_process->sysStackArea = page * MEM_PAGESIZE;
+	child_process->sysStackArea = page;
+	child_process->sysStackArea = MemorySetupPte(child_process->sysStackArea);
+	child_process->sysStackArea ^= 0x1; //Set as Valid
 	
 	bcopy((char *) parent_process->sysStackArea, (char *)child_process->sysStackArea, MEM_PAGESIZE);
 
 	//Set the stackframe
+	
 	stackframe = ((uint32 *)(page * MEM_PAGESIZE + MEM_PAGESIZE - 4));
 	stackframe -= PROCESS_STACK_FRAME_SIZE;
 	
@@ -591,9 +593,14 @@ int ProcessFork (VoidFunc func, uint32 param, char *name, int isUser) {
 	}
 	else
 	{
-		stackframe = ((uint32 *)(page * MEM_PAGESIZE  + MEM_PAGESIZE - 4)); //Set Stackframe
-		pcb->sysStackArea = page * MEM_PAGESIZE; //Area of page
+		pcb->sysStackArea = page;
+		pcb->sysStackArea = MemorySetupPte(pcb->sysStackArea);
+		pcb->sysStackArea ^= 0x1; //Set as Valid
+		
+		stackframe = (uint32 *) (pcb->sysStackArea + ((1 << MEM_L1FIELD_FIRST_BITNUM) - 4)); //Stackframe is set on the system stack area + 1 page
+	
 		pcb->npages++; //Increment number of pcb pages
+
 	}
 
   // Now that the stack frame points at the bottom of the system stack memory area, we need to
