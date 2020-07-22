@@ -330,12 +330,17 @@ void MemoryFreePage(uint32 page)
 	
 }
 
+
+//Question 5
+
 int mfree(PCB* pcb, void* ptr) {
   return -1;
 }
 
 void * malloc(PCB * pcb, int memsize)
 {
+	printf("MEMORY SIZE: %d\n", memsize);
+	printf("THE DONALD\n");
 	return NULL;
 }
 
