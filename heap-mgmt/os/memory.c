@@ -333,14 +333,189 @@ void MemoryFreePage(uint32 page)
 
 //Question 5
 
-int mfree(PCB* pcb, void* ptr) {
-  return -1;
+int mfree(PCB* pcb, void* ptr) 
+{
+	int freeLocation = ((int) ptr & MEM_ADDRESS_OFFSET_MASK) >> HEAP_FIRST_BITNUM;
+	int freeOrder = pcb->heap[freeLocation] & HEAP_ORDER_MASK;
+	int parentStart = freeLocation;
+	int parentEnd = freeLocation + (1 << freeOrder);
+	int order = freeOrder;
+	int i;
+
+	while(1)
+	{
+		if(order == freeOrder)
+		{
+			printf("Freed the block: order = %d, addr = %d, size = %d\n", order, parentStart << HEAP_FIRST_BITNUM, (1 << order) << HEAP_FIRST_BITNUM);
+		}
+		else
+		{
+			printf("Coalesced buddy nodes (order = %d, addr = %d, size = %d) & (order = %d, addr = %d, size = %d)\n",
+							order - 1, parentStart << HEAP_FIRST_BITNUM, (1 << (order - 1)) << HEAP_FIRST_BITNUM, 
+							order - 1, (parentStart + (1 << (order - 1))) << HEAP_FIRST_BITNUM, (1 << (order - 1)) <<HEAP_FIRST_BITNUM);
+			printf("into the parent node (order = %d, addr = %d, size = %d)\n",
+							order, parentStart << HEAP_FIRST_BITNUM, (1 << order) << HEAP_FIRST_BITNUM);
+		}
+
+		for(i = parentStart; i < parentEnd; ++i)
+		{
+			pcb->heap[i] = HEAP_ORDER_MASK & order;
+		}
+
+		parentStart = parentStart >> (order + 1) >> (order + 1);
+		parentEnd = parentStart + (1 << (order + 1));
+
+
+		if((pcb->heap[parentStart] & HEAP_BLOCK_USE_MASK) != 0)
+		{
+			break;
+		}
+		else if((pcb->heap[parentEnd - 1] & HEAP_BLOCK_USE_MASK) != 0)
+		{
+			break;
+		}
+		else if((pcb->heap[parentStart] & HEAP_ORDER_MASK) != order)
+		{
+			break;
+		}
+		else if((pcb->heap[parentEnd - 1] & HEAP_ORDER_MASK) != order)
+		{
+			break;
+		}	
+		order++;
+		if(order > MAX_HEAP_ORDER)
+		{
+			break;
+		}
+	}
+	return 0;
+}
+
+
+void HeapInit(PCB * pcb)
+{
+	int i;
+	for(i = 0; i < MAX_HEAP_BLOCKS; i++)
+	{
+		pcb->heap[i] = MAX_HEAP_ORDER;
+	}
+}
+
+void printBinary(uint32 n)
+{
+	if(n)
+	{
+		printBinary(n >> 1);
+		printf("%d", n & 1);
+	}
+}
+
+void printHeap(PCB * pcb)
+{	
+	int i;
+	for(i = 0; i < MAX_HEAP_BLOCKS; i++)
+	{
+		printf("Index: %d, Value: %x ,IN_USE: %x \n", i, pcb->heap[i] & HEAP_ORDER_MASK, (pcb->heap[i] & HEAP_BLOCK_USE_MASK) >> 31);
+	}
+	printf("\n");	
 }
 
 void * malloc(PCB * pcb, int memsize)
 {
-	printf("MEMORY SIZE: %d\n", memsize);
-	printf("THE DONALD\n");
-	return NULL;
+	int i; //Loop Control Variable
+	int order = 0;
+	int mem_block = 32; //Our block of memory first starts off as order 0
+	int minOrder = MAX_HEAP_ORDER + 1, minOrderLocation = 0, upperBound = 0;
+	int test1;
+	int test2;
+	int test3;
+
+	//Return null if memsize is less than zero or greater than the heap
+	if(memsize <= 0)
+	{
+		return NULL;
+	}
+	else if(memsize > MEM_PAGESIZE)
+	{
+		return NULL;
+	}
+
+	//Make sure that the memsize is 4 byte aligned, if not, round up
+	if( (memsize % 4) != 0)
+	{
+		memsize += (4 - (memsize % 4));
+	}
+	
+	//Create a Block Size that can fit the requested memory	
+	while(memsize > mem_block)
+	{
+		mem_block = mem_block * 2; //Increase the mem_block size until the memsize is less than
+		order++; //Increase the order as we double the block size	
+	}
+
+	
+	//Find Block that is large enough to contain the requested memory (establish a lower bound)
+	i = 0;
+	while(i < MAX_HEAP_BLOCKS)
+	{
+		//3 Tests to pass
+		test1 = ((pcb->heap[i] & HEAP_BLOCK_USE_MASK) == 0); //If the entry is not in use
+		test2 = (pcb->heap[i] & HEAP_ORDER_MASK) >= order; //If the entry is greater than or equal to the order we requested
+		test3 = (pcb->heap[i] & HEAP_ORDER_MASK) < minOrder; //If the entry is less than the minimum
+		
+		if( (test1 & test2) & test3)
+		{
+			minOrder = (pcb->heap[i] & HEAP_ORDER_MASK);
+			minOrderLocation = i;
+		}		
+	
+
+		i = i + (1 << (pcb->heap[i] & HEAP_ORDER_MASK));
+	}
+
+	//Space is fully Occupied
+	if(minOrder == MAX_HEAP_ORDER + 1)
+	{
+		return NULL;
+	}
+
+	//Slice our memory block
+	while(minOrder >= order) 
+	{
+		//find upper location
+		upperBound = (1 << minOrder);
+		while(upperBound <= minOrderLocation)
+		{
+			upperBound = upperBound + (1 << minOrder);
+		}
+	
+		if(minOrder != order)
+		{
+			printf("Created a left child node (order = %d, addr = %d, size = %d) of parent (order = %d, addr = %d, size = %d)\n"
+			, minOrder - 1, minOrderLocation << HEAP_FIRST_BITNUM, (1 << (minOrder - 1)) << HEAP_FIRST_BITNUM
+			, minOrder, minOrderLocation << HEAP_FIRST_BITNUM, (1 << minOrder) << HEAP_FIRST_BITNUM);		
+
+			printf("Created a right child node (order = %d, addr = %d, size = %d) of parent (order = %d, addr = %d, size = %d)\n"
+			, minOrder - 1, minOrderLocation << HEAP_FIRST_BITNUM, (1 << (minOrder)) << HEAP_FIRST_BITNUM
+			, minOrder, minOrderLocation << HEAP_FIRST_BITNUM, (1 << minOrder) << HEAP_FIRST_BITNUM);
+		}
+		
+		for(i = minOrderLocation; i < upperBound; ++i)
+		{
+			//Slice The Tree
+			if(minOrder != order)
+			{
+				pcb->heap[i] = minOrder -1;
+			}	
+			else
+			{
+				pcb->heap[i] |= HEAP_BLOCK_USE_MASK;
+			}
+		}	
+		minOrder--;
+	}
+
+	printf("Allocated the block: order = %d, addr = %d, requested mem size = %d, block size = %d\n", order, minOrderLocation << HEAP_FIRST_BITNUM, memsize, (1 << order) << HEAP_FIRST_BITNUM);
+	return (void *) (pcb->heapBaseAddr + (minOrderLocation << HEAP_FIRST_BITNUM));
 }
 

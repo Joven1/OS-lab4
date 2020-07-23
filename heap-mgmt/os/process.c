@@ -455,6 +455,22 @@ int ProcessFork (VoidFunc func, uint32 param, char *name, int isUser) {
 		pcb->npages++; //Increment the number of pages on pcb
 	}
 
+	page = MemoryAllocPage();
+	if( page == MEM_FAIL )
+	{
+		//Exit if allocation failed
+		printf("Error: Page Cannot Be Allocated\n");
+		exitsim(); 
+	}	
+	else
+	{
+		pcb->pagetable[4] = page;
+		pcb->heapBaseAddr = 4 << MEM_L1FIELD_FIRST_BITNUM;	
+		pcb->npages++;
+	}
+	
+	HeapInit(pcb);
+
 	//Allocate Page for the User Stack
 	
 	page = MemoryAllocPage();
@@ -470,6 +486,7 @@ int ProcessFork (VoidFunc func, uint32 param, char *name, int isUser) {
 		pcb->pagetable[MEM_MAX_VIRTUAL_ADDRESS >> MEM_L1FIELD_FIRST_BITNUM] = MemorySetupPte(page);
 		pcb->npages++;  
 	}
+
 	//Allocate Page for System Stack
 	page = MemoryAllocPage(); //Allocate physical page for system stack
 	if( page == MEM_FAIL )
