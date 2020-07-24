@@ -32,6 +32,18 @@
 
 typedef	void (*VoidFunc)();
 
+//Heap Nodes
+typedef enum { false, true } bool;
+
+typedef struct Heap_Node
+{
+	struct Heap_Node * Buddy; //Heap Node that's paired with current Node
+	uint32 size; //
+	uint32 address;
+	uint32 order;
+	bool occupied;
+} Heap_Node;
+
 // Process control block
 typedef struct PCB {
   uint32	*currentSavedFrame; // -> current saved frame.  MUST BE 1ST!
@@ -43,7 +55,7 @@ typedef struct PCB {
   int		npages;		// Number of pages allocated to this process
   Link		*l;		// Used for keeping PCB in queues
 
-  uint32 heap[MAX_HEAP_BLOCKS]; //Heap Block
+  Heap_Node Heap[MAX_HEAP_BLOCKS]; //Heap Block
   uint32 heapBaseAddr; //Base Address for the heap
 } PCB;
 

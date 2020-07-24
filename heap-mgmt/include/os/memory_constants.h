@@ -40,6 +40,8 @@
 #define MEM_ADDRESS_OFFSET_MASK (MEM_PAGESIZE - 1)
 #define MEM_MASK_PTE_TO_PAGE_ADDRESS (~(MEM_PTE_READONLY | MEM_PTE_DIRTY | MEM_PTE_VALID)) 
 
+
+//Heap Constants
 #define HEAP_FIRST_BITNUM 7
 #define MAX_HEAP_BLOCKS 128 //Max number of heap blocks is 4096/32 = 128
 #define MAX_HEAP_ORDER 7 //Max order is log2(128 Blocks) = 7

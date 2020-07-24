@@ -17,9 +17,9 @@ void main (int argc, char *argv[])
     char s_procs_completed_str[10];      // Used as command-line argument to pass page_mapped handle to new processes
     int program;                        // used to figure out which program to run
 
-	int prog_A = 34;
-	int prog_B = 66;
-	int prog_C = 35;
+	int prog_A = 33;
+	int prog_B = 33;
+	int prog_C = 33;
 	int prog_D = 67;
 
 
@@ -31,13 +31,13 @@ void main (int argc, char *argv[])
 	test_A = malloc(prog_A);
 	test_B = malloc(prog_B);
 	test_C = malloc(prog_C);
-	test_D = malloc(prog_D);
+//	test_D = malloc(prog_D);
 	
-	mfree(test_B);
+/*	mfree(test_B);
 	mfree(test_D);
 	mfree(test_A);
 	mfree(test_C);
-
+*/
 /*
 	prog_A = 32;
 	prog_B = 32;
