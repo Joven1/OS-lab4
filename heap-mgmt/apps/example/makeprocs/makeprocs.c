@@ -41,6 +41,21 @@ void main (int argc, char *argv[])
 	mfree(test_C);
 	printf("Freeing D:\n");
 	mfree(test_D);
+
+	test_A = malloc(prog_A);
+	test_B = malloc(prog_B);
+	test_C = malloc(prog_C);	
+	test_D = malloc(prog_D);
+	
+	printf("Freeing A:\n");
+	mfree(test_A);
+	printf("Freeing B:\n");
+	mfree(test_B);
+	printf("Freeing C:\n");
+	mfree(test_C);
+	printf("Freeing D:\n");
+	mfree(test_D);
+
   if (argc != 2) {
         Printf("Usage: %s <which program to run (1-6) or all of them (0) \n", argv[0]);
         Exit();
