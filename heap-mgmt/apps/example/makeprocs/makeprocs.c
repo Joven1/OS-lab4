@@ -17,10 +17,10 @@ void main (int argc, char *argv[])
     char s_procs_completed_str[10];      // Used as command-line argument to pass page_mapped handle to new processes
     int program;                        // used to figure out which program to run
 
-	int prog_A = 33;
-	int prog_B = 33;
-	int prog_C = 33;
-	int prog_D = 67;
+	int prog_A = 32;
+	int prog_B = 32;
+	int prog_C = 32;	
+	int prog_D = 32;
 
 
 	int * test_A;
@@ -30,22 +30,17 @@ void main (int argc, char *argv[])
 
 	test_A = malloc(prog_A);
 	test_B = malloc(prog_B);
-	test_C = malloc(prog_C);
-//	test_D = malloc(prog_D);
+	test_C = malloc(prog_C);	
+	test_D = malloc(prog_D);
 	
-/*	mfree(test_B);
-	mfree(test_D);
+	printf("Freeing A:\n");
 	mfree(test_A);
+	printf("Freeing B:\n");
+	mfree(test_B);
+	printf("Freeing C:\n");
 	mfree(test_C);
-*/
-/*
-	prog_A = 32;
-	prog_B = 32;
-	test_A = malloc(prog_A);
-	test_B = malloc(prog_B);
-	mfree(prog_B);
-	mfree(prog_A);
-*/  
+	printf("Freeing D:\n");
+	mfree(test_D);
   if (argc != 2) {
         Printf("Usage: %s <which program to run (1-6) or all of them (0) \n", argv[0]);
         Exit();

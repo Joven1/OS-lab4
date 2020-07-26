@@ -38,10 +38,10 @@ typedef enum { false, true } bool;
 typedef struct Heap_Node
 {
 	struct Heap_Node * Buddy; //Heap Node that's paired with current Node
-	uint32 size; //
-	uint32 address;
-	uint32 order;
-	bool occupied;
+	uint32 size; //Size in bytes of Node
+	uint32 address; //Virtual address of Heap Node
+	uint32 order; //Order n in 32 * 2^n of heap node
+	bool occupied; //whether or not memory is taking up that slot
 } Heap_Node;
 
 // Process control block

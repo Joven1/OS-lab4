@@ -1,7 +1,7 @@
 ; Linked by DLX-LD.
 ; MemSize 233472
-; Data size: 144660
-; Text size: 71692
+; Data size: 144860
+; Text size: 73632
 ; Stack size: 8192
 .text 0x1000
 .data 0x13000
@@ -2686,18 +2686,580 @@ L57_LF1:
 	nop
 .endproc _MemoryFreePage
 .align 2
-.proc _mfree
-.global _mfree
-_mfree:
-;  Function 'mfree'; 0 bytes of locals, 0 regs to save.
+.proc _get_Buddy_Index
+.global _get_Buddy_Index
+_get_Buddy_Index:
+;  Function 'get_Buddy_Index'; 16 bytes of locals, 2 regs to save.
 	sw	-4(r29),r30; push fp
 	add	r30,r0,r29; fp = sp
 	sw	-8(r29),r31; push ret addr
-	subui	r29,r29,#8; alloc local storage
+	subui	r29,r29,#32; alloc local storage
+	sw	0(r29),r2
+	sw	4(r29),r3
+	lw	r1,(r30)
+	sw	-12(r30),r1
 	addi	r1,r0,#0
+	sw	-20(r30),r1
+L59_LF1:
+	lw	r1,-20(r30)
+	lw	r2,4(r30)
+	slt	r1,r1,r2
+	bnez	r1,L62_LF1
+	nop; delay slot nop
+	j	L60_LF1
+	nop; delay slot nop
+L62_LF1:
+	lw	r1,-12(r30)
+	srai	r2,r1,#0x1f
+	srli	r3,r2,#0x1f
+	add	r2,r1,r3
+	srai	r1,r2,#0x1
+	sw	-12(r30),r1
+L61_LF1:
+	lw	r2,-20(r30)
+	addi	r1,r2,#1
+	add	r2,r0,r1
+	sw	-20(r30),r2
+	j	L59_LF1
+	nop; delay slot nop
+L60_LF1:
+	lw	r1,-12(r30)
+	andi	r2,r1,#1
+	snei	r1,r2,#0
+	bnez	r1,L63_LF1
+	nop; delay slot nop
+	addi	r1,r0,#1
+	lw	r2,4(r30)
+	sll	r1,r1,r2
+	lw	r2,(r30)
+	add	r1,r2,r1
+	sw	-16(r30),r1
+	j	L64_LF1
+	nop; delay slot nop
+L63_LF1:
+	addi	r1,r0,#1
+	lw	r2,4(r30)
+	sll	r1,r1,r2
+	lw	r2,(r30)
+	sub	r1,r2,r1
+	sw	-16(r30),r1
+L64_LF1:
+	lw	r1,-16(r30)
 	j	L58_LF1
 	nop; delay slot nop
 L58_LF1:
+	lw	r2,0(r29)
+	lw	r3,4(r29)
+	lw	r31,-8(r30)
+	add	r29,r0,r30
+	lw	r30,-4(r30)
+	jr	r31
+	nop
+.endproc _get_Buddy_Index
+.data
+.align 2
+LC2_LF1:
+.ascii "Coalesced buddy nodes \000"
+.align 2
+LC3_LF1:
+.ascii "(order = %d, addr = %d, size = %d) & (order = %d, addr = %d, size = %d"
+.ascii ")\n\000"
+.align 2
+LC4_LF1:
+.ascii "into the parent node (order = %d, addr = %d, size = %d)\n\000"
+.text
+.align 2
+.proc _print_Coalesced_Nodes
+.global _print_Coalesced_Nodes
+_print_Coalesced_Nodes:
+;  Function 'print_Coalesced_Nodes'; 8 bytes of locals, 3 regs to save.
+	sw	-4(r29),r30; push fp
+	add	r30,r0,r29; fp = sp
+	sw	-8(r29),r31; push ret addr
+	subui	r29,r29,#32; alloc local storage
+	sw	0(r29),r2
+	sw	4(r29),r3
+	sw	8(r29),r4
+	lw	r1,4(r30)
+	lw	r3,(r30)
+	lw	r2,8(r3)
+	lw	r3,8(r1)
+	sleu	r4,r2,r3
+	bnez	r4,L66_LF1
+	nop; delay slot nop
+	lw	r2,8(r1)
+L66_LF1:
+	sw	-12(r30),r2
+	addi	r29,r29,#-8
+	add	r1,r0,r29
+	lhi	r2,((LC2_LF1)>>16)&0xffff
+	addui	r2,r2,(LC2_LF1)&0xffff
+	sw	(r1),r2
+	jal	_printf
+	nop; delay slot nop
+	addi	r29,r29,#8
+	lw	r1,(r30)
+	lw	r2,4(r30)
+	lw	r1,8(r1)
+	lw	r2,8(r2)
+	sltu	r1,r1,r2
+	beqz	r1,L67_LF1
+	nop; delay slot nop
+	addi	r29,r29,#-32
+	add	r1,r0,r29
+	lhi	r2,((LC3_LF1)>>16)&0xffff
+	addui	r2,r2,(LC3_LF1)&0xffff
+	sw	(r1),r2
+	lw	r2,(r30)
+	lw	r3,12(r2)
+	sw	4(r1),r3
+	lw	r2,(r30)
+	lw	r3,8(r2)
+	sw	8(r1),r3
+	lw	r2,(r30)
+	lw	r3,4(r2)
+	sw	12(r1),r3
+	lw	r2,4(r30)
+	lw	r3,12(r2)
+	sw	16(r1),r3
+	lw	r2,4(r30)
+	lw	r3,8(r2)
+	sw	20(r1),r3
+	lw	r2,4(r30)
+	lw	r3,4(r2)
+	sw	24(r1),r3
+	jal	_printf
+	nop; delay slot nop
+	addi	r29,r29,#32
+	j	L68_LF1
+	nop; delay slot nop
+L67_LF1:
+	addi	r29,r29,#-32
+	add	r1,r0,r29
+	lhi	r2,((LC3_LF1)>>16)&0xffff
+	addui	r2,r2,(LC3_LF1)&0xffff
+	sw	(r1),r2
+	lw	r2,4(r30)
+	lw	r3,12(r2)
+	sw	4(r1),r3
+	lw	r2,4(r30)
+	lw	r3,8(r2)
+	sw	8(r1),r3
+	lw	r2,4(r30)
+	lw	r3,4(r2)
+	sw	12(r1),r3
+	lw	r2,(r30)
+	lw	r3,12(r2)
+	sw	16(r1),r3
+	lw	r2,(r30)
+	lw	r3,8(r2)
+	sw	20(r1),r3
+	lw	r2,(r30)
+	lw	r3,4(r2)
+	sw	24(r1),r3
+	jal	_printf
+	nop; delay slot nop
+	addi	r29,r29,#32
+L68_LF1:
+	addi	r29,r29,#-16
+	add	r1,r0,r29
+	lhi	r2,((LC4_LF1)>>16)&0xffff
+	addui	r2,r2,(LC4_LF1)&0xffff
+	sw	(r1),r2
+	lw	r2,4(r30)
+	lw	r3,12(r2)
+	addi	r2,r3,#1
+	sw	4(r1),r2
+	lw	r2,-12(r30)
+	sw	8(r1),r2
+	lw	r2,(r30)
+	lw	r3,4(r30)
+	lw	r2,4(r2)
+	lw	r3,4(r3)
+	add	r2,r2,r3
+	sw	12(r1),r2
+	jal	_printf
+	nop; delay slot nop
+	addi	r29,r29,#16
+L65_LF1:
+	lw	r2,0(r29)
+	lw	r3,4(r29)
+	lw	r4,8(r29)
+	lw	r31,-8(r30)
+	add	r29,r0,r30
+	lw	r30,-4(r30)
+	jr	r31
+	nop
+.endproc _print_Coalesced_Nodes
+.align 2
+.proc _Merge_Nodes
+.global _Merge_Nodes
+_Merge_Nodes:
+;  Function 'Merge_Nodes'; 40 bytes of locals, 3 regs to save.
+	sw	-4(r29),r30; push fp
+	add	r30,r0,r29; fp = sp
+	sw	-8(r29),r31; push ret addr
+	subui	r29,r29,#64; alloc local storage
+	sw	0(r29),r2
+	sw	4(r29),r3
+	sw	8(r29),r4
+	addi	r29,r29,#-8
+	add	r1,r0,r29
+	lw	r2,4(r30)
+	sw	(r1),r2
+	lw	r2,4(r30)
+	add	r4,r0,r2
+	slli	r3,r4,#0x2
+	add	r3,r3,r2
+	slli	r2,r3,#0x2
+	lw	r3,(r30)
+	add	r2,r2,r3
+	lw	r3,12(r2)
+	sw	4(r1),r3
+	jal	_get_Buddy_Index
+	nop; delay slot nop
+	addi	r29,r29,#8
+	sw	-12(r30),r1
+	lw	r1,4(r30)
+	lw	r2,-12(r30)
+	sleu	r3,r1,r2
+	bnez	r3,L70_LF1
+	nop; delay slot nop
+	lw	r1,-12(r30)
+L70_LF1:
+	sw	-16(r30),r1
+	lw	r1,4(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,(r30)
+	add	r1,r1,r2
+	lw	r2,-12(r30)
+	add	r4,r0,r2
+	slli	r3,r4,#0x2
+	add	r3,r3,r2
+	slli	r2,r3,#0x2
+	lw	r3,(r30)
+	add	r2,r2,r3
+	lw	r1,4(r1)
+	lw	r2,4(r2)
+	add	r1,r1,r2
+	sw	-20(r30),r1
+	lw	r1,-16(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,(r30)
+	add	r1,r1,r2
+	lw	r2,4(r1)
+	add	r1,r0,r2
+	slli	r2,r1,#0x1
+	sw	-44(r30),r2
+	lw	r1,-16(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,(r30)
+	add	r1,r1,r2
+	lw	r2,12(r1)
+	addi	r1,r2,#1
+	sw	-36(r30),r1
+	lw	r1,-16(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,(r30)
+	add	r1,r1,r2
+	lw	r2,8(r1)
+	sw	-40(r30),r2
+	addi	r1,r0,#0
+	sw	-32(r30),r1
+	lw	r1,-16(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,(r30)
+	add	r1,r1,r2
+	lw	r2,12(r1)
+	seqi	r1,r2,#7
+	beqz	r1,L71_LF1
+	nop; delay slot nop
+	j	L69_LF1
+	nop; delay slot nop
+	j	L72_LF1
+	nop; delay slot nop
+L71_LF1:
+	lw	r1,-12(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,(r30)
+	add	r1,r1,r2
+	lw	r2,16(r1)
+	seqi	r1,r2,#1
+	beqz	r1,L73_LF1
+	nop; delay slot nop
+	j	L69_LF1
+	nop; delay slot nop
+	j	L74_LF1
+	nop; delay slot nop
+L73_LF1:
+	lw	r1,-12(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,(r30)
+	add	r1,r1,r2
+	lw	r2,4(r30)
+	add	r4,r0,r2
+	slli	r3,r4,#0x2
+	add	r3,r3,r2
+	slli	r2,r3,#0x2
+	lw	r3,(r30)
+	add	r2,r2,r3
+	lw	r1,4(r1)
+	lw	r2,4(r2)
+	sne	r1,r1,r2
+	beqz	r1,L72_LF1
+	nop; delay slot nop
+	j	L69_LF1
+	nop; delay slot nop
+L75_LF1:
+L74_LF1:
+L72_LF1:
+	addi	r29,r29,#-8
+	add	r1,r0,r29
+	lw	r2,4(r30)
+	add	r4,r0,r2
+	slli	r3,r4,#0x2
+	add	r3,r3,r2
+	slli	r2,r3,#0x2
+	lw	r3,(r30)
+	add	r2,r3,r2
+	sw	(r1),r2
+	lw	r2,-12(r30)
+	add	r4,r0,r2
+	slli	r3,r4,#0x2
+	add	r3,r3,r2
+	slli	r2,r3,#0x2
+	lw	r3,(r30)
+	add	r2,r3,r2
+	sw	4(r1),r2
+	jal	_print_Coalesced_Nodes
+	nop; delay slot nop
+	addi	r29,r29,#8
+	lw	r1,-16(r30)
+	sw	-24(r30),r1
+L76_LF1:
+	lw	r2,-20(r30)
+	srli	r1,r2,#0x5
+	lw	r2,-16(r30)
+	add	r1,r1,r2
+	lw	r2,-24(r30)
+	sltu	r1,r2,r1
+	bnez	r1,L79_LF1
+	nop; delay slot nop
+	j	L77_LF1
+	nop; delay slot nop
+L79_LF1:
+	lw	r1,-24(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,(r30)
+	add	r1,r1,r2
+	lw	r2,-48(r30)
+	sw	(r1),r2
+	lw	r2,-44(r30)
+	sw	4(r1),r2
+	lw	r2,-40(r30)
+	sw	8(r1),r2
+	lw	r2,-36(r30)
+	sw	12(r1),r2
+	lw	r2,-32(r30)
+	sw	16(r1),r2
+L78_LF1:
+	lw	r2,-24(r30)
+	addi	r1,r2,#1
+	add	r2,r0,r1
+	sw	-24(r30),r2
+	j	L76_LF1
+	nop; delay slot nop
+L77_LF1:
+	addi	r29,r29,#-8
+	add	r1,r0,r29
+	lw	r2,(r30)
+	sw	(r1),r2
+	lw	r2,-16(r30)
+	sw	4(r1),r2
+	jal	_Merge_Nodes
+	nop; delay slot nop
+	addi	r29,r29,#8
+L69_LF1:
+	lw	r2,0(r29)
+	lw	r3,4(r29)
+	lw	r4,8(r29)
+	lw	r31,-8(r30)
+	add	r29,r0,r30
+	lw	r30,-4(r30)
+	jr	r31
+	nop
+.endproc _Merge_Nodes
+.data
+.align 2
+LC5_LF1:
+.ascii "Freed the block: order = %d, addr = %d, size = %d\n\000"
+.text
+.align 2
+.proc _mfree
+.global _mfree
+_mfree:
+;  Function 'mfree'; 80 bytes of locals, 2 regs to save.
+	sw	-4(r29),r30; push fp
+	add	r30,r0,r29; fp = sp
+	sw	-8(r29),r31; push ret addr
+	subui	r29,r29,#96; alloc local storage
+	sw	0(r29),r2
+	sw	4(r29),r3
+	lw	r1,(r30)
+	lw	r2,4(r30)
+	lw	r3,3688(r1)
+	sub	r1,r2,r3
+	srli	r2,r1,#0x5
+	sw	-12(r30),r2
+	lw	r1,-12(r30)
+	sw	-16(r30),r1
+	lw	r1,(r30)
+	addi	r2,r1,#1128
+	sw	-88(r30),r2
+	lw	r1,-16(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,-88(r30)
+	add	r1,r1,r2
+	lw	r2,16(r1)
+	snei	r1,r2,#0
+	bnez	r1,L81_LF1
+	nop; delay slot nop
+	addi	r1,r0,#-1
+	j	L80_LF1
+	nop; delay slot nop
+L81_LF1:
+	lw	r1,-12(r30)
+	slti	r2,r1,#0
+	beqz	r2,L82_LF1
+	nop; delay slot nop
+	addi	r1,r0,#-1
+	j	L80_LF1
+	nop; delay slot nop
+L82_LF1:
+	lw	r1,-12(r30)
+	sgti	r2,r1,#127
+	beqz	r2,L83_LF1
+	nop; delay slot nop
+	addi	r1,r0,#-1
+	j	L80_LF1
+	nop; delay slot nop
+L83_LF1:
+	lw	r1,-16(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,-88(r30)
+	add	r1,r1,r2
+	lw	r2,(r1)
+	sw	-48(r30),r2
+	lw	r2,4(r1)
+	sw	-44(r30),r2
+	lw	r2,8(r1)
+	sw	-40(r30),r2
+	lw	r2,12(r1)
+	sw	-36(r30),r2
+	lw	r1,16(r1)
+	sw	-32(r30),r1
+	lw	r1,-16(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,-88(r30)
+	add	r1,r1,r2
+	lw	r2,12(r1)
+	sw	-80(r30),r2
+	lw	r1,-44(r30)
+	sw	-84(r30),r1
+	lw	r1,-16(r30)
+	sw	-76(r30),r1
+L84_LF1:
+	addi	r1,r0,#1
+	lw	r2,-80(r30)
+	sll	r1,r1,r2
+	lw	r2,-16(r30)
+	add	r1,r1,r2
+	lw	r2,-76(r30)
+	slt	r1,r2,r1
+	bnez	r1,L87_LF1
+	nop; delay slot nop
+	j	L85_LF1
+	nop; delay slot nop
+L87_LF1:
+	lw	r1,-76(r30)
+	add	r3,r0,r1
+	slli	r2,r3,#0x2
+	add	r2,r2,r1
+	slli	r1,r2,#0x2
+	lw	r2,-88(r30)
+	add	r1,r1,r2
+	addi	r2,r0,#0
+	sw	16(r1),r2
+L86_LF1:
+	lw	r2,-76(r30)
+	addi	r1,r2,#1
+	add	r2,r0,r1
+	sw	-76(r30),r2
+	j	L84_LF1
+	nop; delay slot nop
+L85_LF1:
+	addi	r29,r29,#-16
+	add	r1,r0,r29
+	lhi	r2,((LC5_LF1)>>16)&0xffff
+	addui	r2,r2,(LC5_LF1)&0xffff
+	sw	(r1),r2
+	lw	r2,-36(r30)
+	sw	4(r1),r2
+	lw	r2,-40(r30)
+	sw	8(r1),r2
+	lw	r2,-44(r30)
+	sw	12(r1),r2
+	jal	_printf
+	nop; delay slot nop
+	addi	r29,r29,#16
+	addi	r29,r29,#-8
+	add	r1,r0,r29
+	lw	r2,-88(r30)
+	sw	(r1),r2
+	lw	r2,-16(r30)
+	sw	4(r1),r2
+	jal	_Merge_Nodes
+	nop; delay slot nop
+	addi	r29,r29,#8
+	lw	r1,-84(r30)
+	j	L80_LF1
+	nop; delay slot nop
+L80_LF1:
+	lw	r2,0(r29)
+	lw	r3,4(r29)
 	lw	r31,-8(r30)
 	add	r29,r0,r30
 	lw	r30,-4(r30)
@@ -2716,17 +3278,19 @@ _HeapInit:
 	sw	0(r29),r2
 	sw	4(r29),r3
 	sw	8(r29),r4
-	nop
+	lw	r1,(r30)
+	addi	r2,r1,#1128
+	sw	-16(r30),r2
 	addi	r1,r0,#0
 	sw	-12(r30),r1
-L60_LF1:
+L89_LF1:
 	lw	r1,-12(r30)
 	slei	r2,r1,#127
-	bnez	r2,L63_LF1
+	bnez	r2,L92_LF1
 	nop; delay slot nop
-	j	L61_LF1
+	j	L90_LF1
 	nop; delay slot nop
-L63_LF1:
+L92_LF1:
 	lw	r1,(r30)
 	lw	r2,-12(r30)
 	add	r4,r0,r2
@@ -2743,9 +3307,8 @@ L63_LF1:
 	add	r3,r3,r2
 	slli	r2,r3,#0x2
 	add	r1,r1,r2
-	lw	r2,(r30)
-	lw	r3,3688(r2)
-	sw	1136(r1),r3
+	addi	r2,r0,#0
+	sw	1136(r1),r2
 	lw	r1,(r30)
 	lw	r2,-12(r30)
 	add	r4,r0,r2
@@ -2762,33 +3325,17 @@ L63_LF1:
 	add	r3,r3,r2
 	slli	r2,r3,#0x2
 	add	r1,r1,r2
-	lw	r2,-12(r30)
-	add	r4,r0,r2
-	slli	r3,r4,#0x2
-	add	r3,r3,r2
-	slli	r2,r3,#0x2
-	addi	r3,r2,#1128
-	lw	r2,(r30)
-	add	r3,r2,r3
-	sw	1128(r1),r3
-	lw	r1,(r30)
-	lw	r2,-12(r30)
-	add	r4,r0,r2
-	slli	r3,r4,#0x2
-	add	r3,r3,r2
-	slli	r2,r3,#0x2
-	add	r1,r1,r2
 	addi	r2,r0,#0
 	sw	1144(r1),r2
-L62_LF1:
+L91_LF1:
 	lw	r2,-12(r30)
 	addi	r1,r2,#1
 	add	r2,r0,r1
 	sw	-12(r30),r2
-	j	L60_LF1
+	j	L89_LF1
 	nop; delay slot nop
-L61_LF1:
-L59_LF1:
+L90_LF1:
+L88_LF1:
 	lw	r2,0(r29)
 	lw	r3,4(r29)
 	lw	r4,8(r29)
@@ -2800,10 +3347,10 @@ L59_LF1:
 .endproc _HeapInit
 .data
 .align 2
-LC2_LF1:
-.ascii "Index: %d Size: %d, \000"
+LC6_LF1:
+.ascii "|Index: %d Size: %d Status: %d  |\000"
 .align 2
-LC3_LF1:
+LC7_LF1:
 .ascii "\n\000"
 .text
 .align 2
@@ -2820,18 +3367,18 @@ _printHeap:
 	sw	8(r29),r4
 	addi	r1,r0,#0
 	sw	-12(r30),r1
-L65_LF1:
+L94_LF1:
 	lw	r1,-12(r30)
 	slei	r2,r1,#127
-	bnez	r2,L67_LF1
+	bnez	r2,L96_LF1
 	nop; delay slot nop
-	j	L66_LF1
+	j	L95_LF1
 	nop; delay slot nop
-L67_LF1:
+L96_LF1:
 	addi	r29,r29,#-16
 	add	r1,r0,r29
-	lhi	r2,((LC2_LF1)>>16)&0xffff
-	addui	r2,r2,(LC2_LF1)&0xffff
+	lhi	r2,((LC6_LF1)>>16)&0xffff
+	addui	r2,r2,(LC6_LF1)&0xffff
 	sw	(r1),r2
 	lw	r2,-12(r30)
 	sw	4(r1),r2
@@ -2844,6 +3391,15 @@ L67_LF1:
 	add	r2,r2,r3
 	lw	r3,4(r2)
 	sw	8(r1),r3
+	lw	r2,-12(r30)
+	add	r4,r0,r2
+	slli	r3,r4,#0x2
+	add	r3,r3,r2
+	slli	r2,r3,#0x2
+	lw	r3,(r30)
+	add	r2,r2,r3
+	lw	r3,16(r2)
+	sw	12(r1),r3
 	jal	_printf
 	nop; delay slot nop
 	addi	r29,r29,#16
@@ -2860,18 +3416,18 @@ L67_LF1:
 	lw	r2,-12(r30)
 	add	r1,r2,r1
 	sw	-12(r30),r1
-	j	L65_LF1
+	j	L94_LF1
 	nop; delay slot nop
-L66_LF1:
+L95_LF1:
 	addi	r29,r29,#-8
 	add	r1,r0,r29
-	lhi	r2,((LC3_LF1)>>16)&0xffff
-	addui	r2,r2,(LC3_LF1)&0xffff
+	lhi	r2,((LC7_LF1)>>16)&0xffff
+	addui	r2,r2,(LC7_LF1)&0xffff
 	sw	(r1),r2
 	jal	_printf
 	nop; delay slot nop
 	addi	r29,r29,#8
-L64_LF1:
+L93_LF1:
 	lw	r2,0(r29)
 	lw	r3,4(r29)
 	lw	r4,8(r29)
@@ -2883,7 +3439,7 @@ L64_LF1:
 .endproc _printHeap
 .data
 .align 2
-LC4_LF1:
+LC8_LF1:
 .ascii "%d\000"
 .text
 .align 2
@@ -2899,7 +3455,7 @@ _printBinary:
 	sw	4(r29),r3
 	lw	r1,(r30)
 	snei	r2,r1,#0
-	beqz	r2,L69_LF1
+	beqz	r2,L98_LF1
 	nop; delay slot nop
 	addi	r29,r29,#-8
 	add	r1,r0,r29
@@ -2911,8 +3467,8 @@ _printBinary:
 	addi	r29,r29,#8
 	addi	r29,r29,#-8
 	add	r1,r0,r29
-	lhi	r2,((LC4_LF1)>>16)&0xffff
-	addui	r2,r2,(LC4_LF1)&0xffff
+	lhi	r2,((LC8_LF1)>>16)&0xffff
+	addui	r2,r2,(LC8_LF1)&0xffff
 	sw	(r1),r2
 	lw	r2,(r30)
 	andi	r3,r2,#1
@@ -2920,8 +3476,8 @@ _printBinary:
 	jal	_printf
 	nop; delay slot nop
 	addi	r29,r29,#8
-L69_LF1:
-L68_LF1:
+L98_LF1:
+L97_LF1:
 	lw	r2,0(r29)
 	lw	r3,4(r29)
 	lw	r31,-8(r30)
@@ -2932,20 +3488,11 @@ L68_LF1:
 .endproc _printBinary
 .data
 .align 2
-LC5_LF1:
-.ascii "Order is : %d \n\000"
-.align 2
-LC6_LF1:
-.ascii "Current Order is: %d\n\000"
-.align 2
-LC7_LF1:
-.ascii "Split this Block %d times\n\n\n\000"
-.align 2
-LC8_LF1:
+LC9_LF1:
 .ascii "Created a right child node (order = %d, addr = %d, size = %d ) of pare"
 .ascii "nt (order = %d, addr = %d, size = %d)\n\000"
 .align 2
-LC9_LF1:
+LC10_LF1:
 .ascii "Created a left child node (order = %d, addr = %d, size = %d ) of paren"
 .ascii "t (order = %d, addr = %d, size = %d)\n\000"
 .text
@@ -2975,54 +3522,17 @@ _SplitNode:
 	lw	r1,8(r30)
 	sub	r2,r2,r1
 	sw	-16(r30),r2
-	addi	r29,r29,#-8
-	add	r1,r0,r29
-	lhi	r2,((LC5_LF1)>>16)&0xffff
-	addui	r2,r2,(LC5_LF1)&0xffff
-	sw	(r1),r2
-	lw	r2,8(r30)
-	sw	4(r1),r2
-	jal	_printf
-	nop; delay slot nop
-	addi	r29,r29,#8
-	addi	r29,r29,#-8
-	add	r1,r0,r29
-	lhi	r2,((LC6_LF1)>>16)&0xffff
-	addui	r2,r2,(LC6_LF1)&0xffff
-	sw	(r1),r2
-	lw	r2,4(r30)
-	add	r4,r0,r2
-	slli	r3,r4,#0x2
-	add	r3,r3,r2
-	slli	r2,r3,#0x2
-	lw	r3,-12(r30)
-	add	r2,r2,r3
-	lw	r3,12(r2)
-	sw	4(r1),r3
-	jal	_printf
-	nop; delay slot nop
-	addi	r29,r29,#8
-	addi	r29,r29,#-8
-	add	r1,r0,r29
-	lhi	r2,((LC7_LF1)>>16)&0xffff
-	addui	r2,r2,(LC7_LF1)&0xffff
-	sw	(r1),r2
-	lw	r2,-16(r30)
-	sw	4(r1),r2
-	jal	_printf
-	nop; delay slot nop
-	addi	r29,r29,#8
 	addi	r1,r0,#0
 	sw	-20(r30),r1
-L71_LF1:
+L100_LF1:
 	lw	r1,-20(r30)
 	lw	r2,-16(r30)
 	sltu	r1,r1,r2
-	bnez	r1,L74_LF1
+	bnez	r1,L103_LF1
 	nop; delay slot nop
-	j	L72_LF1
+	j	L101_LF1
 	nop; delay slot nop
-L74_LF1:
+L103_LF1:
 	lw	r1,4(r30)
 	add	r3,r0,r1
 	slli	r2,r3,#0x2
@@ -3125,7 +3635,7 @@ L74_LF1:
 	lw	r1,8(r1)
 	add	r2,r1,r2
 	sw	-36(r30),r2
-L75_LF1:
+L104_LF1:
 	addi	r1,r0,#1
 	lw	r2,-44(r30)
 	sll	r1,r1,r2
@@ -3133,11 +3643,11 @@ L75_LF1:
 	add	r1,r1,r2
 	lw	r2,-24(r30)
 	sltu	r1,r2,r1
-	bnez	r1,L78_LF1
+	bnez	r1,L107_LF1
 	nop; delay slot nop
-	j	L76_LF1
+	j	L105_LF1
 	nop; delay slot nop
-L78_LF1:
+L107_LF1:
 	lw	r1,-24(r30)
 	add	r3,r0,r1
 	slli	r2,r3,#0x2
@@ -3180,16 +3690,16 @@ L78_LF1:
 	add	r1,r1,r2
 	lw	r2,-32(r30)
 	sw	8(r1),r2
-L77_LF1:
+L106_LF1:
 	lw	r2,-24(r30)
 	addi	r1,r2,#1
 	add	r2,r0,r1
 	sw	-24(r30),r2
-	j	L75_LF1
+	j	L104_LF1
 	nop; delay slot nop
-L76_LF1:
+L105_LF1:
 	nop
-L79_LF1:
+L108_LF1:
 	addi	r1,r0,#2
 	lw	r2,-44(r30)
 	sll	r1,r1,r2
@@ -3197,11 +3707,11 @@ L79_LF1:
 	add	r1,r1,r2
 	lw	r2,-28(r30)
 	sltu	r1,r2,r1
-	bnez	r1,L82_LF1
+	bnez	r1,L111_LF1
 	nop; delay slot nop
-	j	L80_LF1
+	j	L109_LF1
 	nop; delay slot nop
-L82_LF1:
+L111_LF1:
 	lw	r1,-28(r30)
 	add	r3,r0,r1
 	slli	r2,r3,#0x2
@@ -3244,14 +3754,14 @@ L82_LF1:
 	add	r1,r1,r2
 	lw	r2,-36(r30)
 	sw	8(r1),r2
-L81_LF1:
+L110_LF1:
 	lw	r2,-28(r30)
 	addi	r1,r2,#1
 	add	r2,r0,r1
 	sw	-28(r30),r2
-	j	L79_LF1
+	j	L108_LF1
 	nop; delay slot nop
-L80_LF1:
+L109_LF1:
 	addi	r1,r0,#1
 	lw	r2,-44(r30)
 	sll	r1,r1,r2
@@ -3262,8 +3772,8 @@ L80_LF1:
 	sw	-24(r30),r1
 	addi	r29,r29,#-32
 	add	r1,r0,r29
-	lhi	r2,((LC8_LF1)>>16)&0xffff
-	addui	r2,r2,(LC8_LF1)&0xffff
+	lhi	r2,((LC9_LF1)>>16)&0xffff
+	addui	r2,r2,(LC9_LF1)&0xffff
 	sw	(r1),r2
 	lw	r2,-28(r30)
 	add	r4,r0,r2
@@ -3303,8 +3813,8 @@ L80_LF1:
 	addi	r29,r29,#32
 	addi	r29,r29,#-32
 	add	r1,r0,r29
-	lhi	r2,((LC9_LF1)>>16)&0xffff
-	addui	r2,r2,(LC9_LF1)&0xffff
+	lhi	r2,((LC10_LF1)>>16)&0xffff
+	addui	r2,r2,(LC10_LF1)&0xffff
 	sw	(r1),r2
 	lw	r2,-24(r30)
 	add	r4,r0,r2
@@ -3342,38 +3852,15 @@ L80_LF1:
 	jal	_printf
 	nop; delay slot nop
 	addi	r29,r29,#32
-L73_LF1:
+L102_LF1:
 	lw	r2,-20(r30)
 	addi	r1,r2,#1
 	add	r2,r0,r1
 	sw	-20(r30),r2
-	j	L71_LF1
+	j	L100_LF1
 	nop; delay slot nop
-L72_LF1:
-	lw	r1,4(r30)
-	add	r3,r0,r1
-	slli	r2,r3,#0x2
-	add	r2,r2,r1
-	slli	r1,r2,#0x2
-	lw	r2,-12(r30)
-	add	r1,r1,r2
-	addi	r2,r0,#1
-	sw	16(r1),r2
-	lw	r1,(r30)
-	lw	r2,4(r30)
-	add	r4,r0,r2
-	slli	r3,r4,#0x2
-	add	r3,r3,r2
-	slli	r2,r3,#0x2
-	lw	r3,-12(r30)
-	add	r2,r2,r3
-	lw	r1,3688(r1)
-	lw	r3,8(r2)
-	add	r2,r1,r3
-	add	r1,r0,r2
-	j	L70_LF1
-	nop; delay slot nop
-L70_LF1:
+L101_LF1:
+L99_LF1:
 	lw	r2,0(r29)
 	lw	r3,4(r29)
 	lw	r4,8(r29)
@@ -3385,19 +3872,82 @@ L70_LF1:
 .endproc _SplitNode
 .data
 .align 2
-LC10_LF1:
-.ascii "Heap Before: \n\000"
-.align 2
 LC11_LF1:
 .ascii "Allocated the block: order = %d, addr = %d, requested mem size = %d, b"
 .ascii "lock size = %d\n\000"
+.text
+.align 2
+.proc _printAllocation
+.global _printAllocation
+_printAllocation:
+;  Function 'printAllocation'; 0 bytes of locals, 1 regs to save.
+	sw	-4(r29),r30; push fp
+	add	r30,r0,r29; fp = sp
+	sw	-8(r29),r31; push ret addr
+	subui	r29,r29,#16; alloc local storage
+	sw	0(r29),r2
+	addi	r29,r29,#-24
+	add	r1,r0,r29
+	lhi	r2,((LC11_LF1)>>16)&0xffff
+	addui	r2,r2,(LC11_LF1)&0xffff
+	sw	(r1),r2
+	lw	r2,(r30)
+	sw	4(r1),r2
+	lw	r2,4(r30)
+	sw	8(r1),r2
+	lw	r2,8(r30)
+	sw	12(r1),r2
+	lw	r2,12(r30)
+	sw	16(r1),r2
+	jal	_printf
+	nop; delay slot nop
+	addi	r29,r29,#24
+L112_LF1:
+	lw	r2,0(r29)
+	lw	r31,-8(r30)
+	add	r29,r0,r30
+	lw	r30,-4(r30)
+	jr	r31
+	nop
+.endproc _printAllocation
+.data
 .align 2
 LC12_LF1:
-.ascii "Heap After: \n\000"
-.align 2
-LC13_LF1:
-.ascii "\n\n\n\000"
+.ascii "Created a heap block of size %d bytes: virtual address %d, physical ad"
+.ascii "dress %d\n\000"
 .text
+.align 2
+.proc _printHeapResult
+.global _printHeapResult
+_printHeapResult:
+;  Function 'printHeapResult'; 0 bytes of locals, 1 regs to save.
+	sw	-4(r29),r30; push fp
+	add	r30,r0,r29; fp = sp
+	sw	-8(r29),r31; push ret addr
+	subui	r29,r29,#16; alloc local storage
+	sw	0(r29),r2
+	addi	r29,r29,#-16
+	add	r1,r0,r29
+	lhi	r2,((LC12_LF1)>>16)&0xffff
+	addui	r2,r2,(LC12_LF1)&0xffff
+	sw	(r1),r2
+	lw	r2,(r30)
+	sw	4(r1),r2
+	lw	r2,4(r30)
+	sw	8(r1),r2
+	lw	r2,8(r30)
+	sw	12(r1),r2
+	jal	_printf
+	nop; delay slot nop
+	addi	r29,r29,#16
+L113_LF1:
+	lw	r2,0(r29)
+	lw	r31,-8(r30)
+	add	r29,r0,r30
+	lw	r30,-4(r30)
+	jr	r31
+	nop
+.endproc _printHeapResult
 .align 2
 .proc _malloc
 .global _malloc
@@ -3416,60 +3966,44 @@ _malloc:
 	sw	-20(r30),r1
 	addi	r1,r0,#8
 	sw	-24(r30),r1
-	addi	r1,r0,#-1
+	addi	r1,r0,#0
 	sw	-28(r30),r1
 	lw	r1,(r30)
 	addi	r2,r1,#1128
 	sw	-32(r30),r2
-	addi	r29,r29,#-8
-	add	r1,r0,r29
-	lhi	r2,((LC10_LF1)>>16)&0xffff
-	addui	r2,r2,(LC10_LF1)&0xffff
-	sw	(r1),r2
-	jal	_printf
-	nop; delay slot nop
-	addi	r29,r29,#8
-	addi	r29,r29,#-8
-	add	r1,r0,r29
-	lw	r2,(r30)
-	addi	r3,r2,#1128
-	sw	(r1),r3
-	jal	_printHeap
-	nop; delay slot nop
-	addi	r29,r29,#8
 	lw	r1,4(r30)
 	slei	r2,r1,#0
-	beqz	r2,L84_LF1
+	beqz	r2,L115_LF1
 	nop; delay slot nop
 	addi	r1,r0,#0
-	j	L83_LF1
+	j	L114_LF1
 	nop; delay slot nop
-	j	L85_LF1
+	j	L116_LF1
 	nop; delay slot nop
-L84_LF1:
+L115_LF1:
 	lw	r1,4(r30)
 	sgti	r2,r1,#4096
-	beqz	r2,L85_LF1
+	beqz	r2,L116_LF1
 	nop; delay slot nop
 	addi	r1,r0,#0
-	j	L83_LF1
+	j	L114_LF1
 	nop; delay slot nop
-L86_LF1:
-L85_LF1:
+L117_LF1:
+L116_LF1:
 	lw	r1,4(r30)
 	andi	r2,r1,#3
 	snei	r1,r2,#0
-	beqz	r1,L87_LF1
+	beqz	r1,L118_LF1
 	nop; delay slot nop
 	lw	r2,4(r30)
 	addi	r1,r2,#4
 	lw	r2,4(r30)
 	add	r3,r0,r2
 	sgei	r4,r3,#0
-	bnez	r4,L88_LF1
+	bnez	r4,L119_LF1
 	nop; delay slot nop
 	addi	r3,r3,#3
-L88_LF1:
+L119_LF1:
 	srai	r3,r3,#0x2
 	addi	r4,r0,#4
 	movi2fp	f0,r3
@@ -3479,17 +4013,17 @@ L88_LF1:
 	sub	r2,r2,r3
 	sub	r1,r1,r2
 	sw	4(r30),r1
-L87_LF1:
+L118_LF1:
 	nop
-L89_LF1:
+L120_LF1:
 	lw	r1,4(r30)
 	lw	r2,-20(r30)
-	sgt	r1,r1,r2
-	bnez	r1,L91_LF1
+	sgtu	r1,r1,r2
+	bnez	r1,L122_LF1
 	nop; delay slot nop
-	j	L90_LF1
+	j	L121_LF1
 	nop; delay slot nop
-L91_LF1:
+L122_LF1:
 	lw	r1,-20(r30)
 	add	r2,r0,r1
 	slli	r1,r2,#0x1
@@ -3498,20 +4032,20 @@ L91_LF1:
 	addi	r1,r2,#1
 	add	r2,r0,r1
 	sw	-16(r30),r2
-	j	L89_LF1
+	j	L120_LF1
 	nop; delay slot nop
-L90_LF1:
+L121_LF1:
 	nop
 	addi	r1,r0,#0
 	sw	-12(r30),r1
-L92_LF1:
+L123_LF1:
 	lw	r1,-12(r30)
-	slei	r2,r1,#127
-	bnez	r2,L95_LF1
+	sleui	r2,r1,#127
+	bnez	r2,L126_LF1
 	nop; delay slot nop
-	j	L93_LF1
+	j	L124_LF1
 	nop; delay slot nop
-L95_LF1:
+L126_LF1:
 	lw	r1,-12(r30)
 	add	r3,r0,r1
 	slli	r2,r3,#0x2
@@ -3521,7 +4055,7 @@ L95_LF1:
 	add	r1,r1,r2
 	lw	r2,16(r1)
 	snei	r1,r2,#0
-	bnez	r1,L94_LF1
+	bnez	r1,L125_LF1
 	nop; delay slot nop
 	lw	r1,-12(r30)
 	add	r3,r0,r1
@@ -3533,7 +4067,7 @@ L95_LF1:
 	lw	r2,12(r1)
 	lw	r1,-16(r30)
 	seq	r2,r2,r1
-	beqz	r2,L97_LF1
+	beqz	r2,L128_LF1
 	nop; delay slot nop
 	lw	r1,-12(r30)
 	add	r3,r0,r1
@@ -3544,11 +4078,8 @@ L95_LF1:
 	add	r1,r1,r2
 	addi	r2,r0,#1
 	sw	16(r1),r2
-	addi	r29,r29,#-24
+	addi	r29,r29,#-16
 	add	r1,r0,r29
-	lhi	r2,((LC11_LF1)>>16)&0xffff
-	addui	r2,r2,(LC11_LF1)&0xffff
-	sw	(r1),r2
 	lw	r2,-12(r30)
 	add	r4,r0,r2
 	slli	r3,r4,#0x2
@@ -3557,7 +4088,7 @@ L95_LF1:
 	lw	r3,-32(r30)
 	add	r2,r2,r3
 	lw	r3,12(r2)
-	sw	4(r1),r3
+	sw	(r1),r3
 	lw	r2,-12(r30)
 	add	r4,r0,r2
 	slli	r3,r4,#0x2
@@ -3566,9 +4097,9 @@ L95_LF1:
 	lw	r3,-32(r30)
 	add	r2,r2,r3
 	lw	r3,8(r2)
-	sw	8(r1),r3
+	sw	4(r1),r3
 	lw	r2,4(r30)
-	sw	12(r1),r2
+	sw	8(r1),r2
 	lw	r2,-12(r30)
 	add	r4,r0,r2
 	slli	r3,r4,#0x2
@@ -3577,21 +4108,56 @@ L95_LF1:
 	lw	r3,-32(r30)
 	add	r2,r2,r3
 	lw	r3,4(r2)
-	sw	16(r1),r3
-	jal	_printf
+	sw	12(r1),r3
+	jal	_printAllocation
 	nop; delay slot nop
-	addi	r29,r29,#24
+	addi	r29,r29,#16
 	lw	r1,(r30)
-	lw	r3,-12(r30)
-	slli	r2,r3,#0x7
+	lw	r2,-12(r30)
+	add	r4,r0,r2
+	slli	r3,r4,#0x2
+	add	r3,r3,r2
+	slli	r2,r3,#0x2
+	lw	r3,-32(r30)
+	add	r2,r2,r3
 	lw	r1,3688(r1)
-	add	r2,r2,r1
-	add	r1,r0,r2
-	j	L83_LF1
+	lw	r2,8(r2)
+	add	r1,r1,r2
+	sw	-36(r30),r1
+	addi	r29,r29,#-8
+	add	r1,r0,r29
+	lw	r2,(r30)
+	sw	(r1),r2
+	lw	r2,-36(r30)
+	sw	4(r1),r2
+	jal	_MemoryTranslateUserToSystem
 	nop; delay slot nop
-	j	L98_LF1
+	addi	r29,r29,#8
+	sw	-40(r30),r1
+	addi	r29,r29,#-16
+	add	r1,r0,r29
+	lw	r2,-12(r30)
+	add	r4,r0,r2
+	slli	r3,r4,#0x2
+	add	r3,r3,r2
+	slli	r2,r3,#0x2
+	lw	r3,-32(r30)
+	add	r2,r2,r3
+	lw	r3,4(r2)
+	sw	(r1),r3
+	lw	r2,-36(r30)
+	sw	4(r1),r2
+	lw	r2,-40(r30)
+	sw	8(r1),r2
+	jal	_printHeapResult
 	nop; delay slot nop
-L97_LF1:
+	addi	r29,r29,#16
+	lw	r1,-36(r30)
+	j	L114_LF1
+	nop; delay slot nop
+	j	L129_LF1
+	nop; delay slot nop
+L128_LF1:
 	lw	r1,-12(r30)
 	add	r3,r0,r1
 	slli	r2,r3,#0x2
@@ -3602,7 +4168,7 @@ L97_LF1:
 	lw	r2,12(r1)
 	lw	r1,-16(r30)
 	sgtu	r2,r2,r1
-	beqz	r2,L94_LF1
+	beqz	r2,L125_LF1
 	nop; delay slot nop
 	lw	r1,-12(r30)
 	add	r3,r0,r1
@@ -3614,7 +4180,7 @@ L97_LF1:
 	lw	r2,12(r1)
 	lw	r1,-24(r30)
 	sltu	r2,r2,r1
-	beqz	r2,L94_LF1
+	beqz	r2,L125_LF1
 	nop; delay slot nop
 	lw	r1,-12(r30)
 	add	r3,r0,r1
@@ -3627,11 +4193,11 @@ L97_LF1:
 	sw	-24(r30),r2
 	lw	r1,-12(r30)
 	sw	-28(r30),r1
-L100_LF1:
-L99_LF1:
-L98_LF1:
-L96_LF1:
-L94_LF1:
+L131_LF1:
+L130_LF1:
+L129_LF1:
+L127_LF1:
+L125_LF1:
 	lw	r1,-12(r30)
 	add	r3,r0,r1
 	slli	r2,r3,#0x2
@@ -3645,17 +4211,17 @@ L94_LF1:
 	lw	r2,-12(r30)
 	add	r1,r2,r1
 	sw	-12(r30),r1
-	j	L92_LF1
+	j	L123_LF1
 	nop; delay slot nop
-L93_LF1:
+L124_LF1:
 	lw	r1,-24(r30)
 	seqi	r2,r1,#8
-	beqz	r2,L101_LF1
+	beqz	r2,L132_LF1
 	nop; delay slot nop
 	addi	r1,r0,#0
-	j	L83_LF1
+	j	L114_LF1
 	nop; delay slot nop
-L101_LF1:
+L132_LF1:
 	addi	r29,r29,#-16
 	add	r1,r0,r29
 	lw	r2,(r30)
@@ -3669,35 +4235,20 @@ L101_LF1:
 	jal	_SplitNode
 	nop; delay slot nop
 	addi	r29,r29,#16
-	sw	-36(r30),r1
-	addi	r29,r29,#-8
-	add	r1,r0,r29
-	lhi	r2,((LC12_LF1)>>16)&0xffff
-	addui	r2,r2,(LC12_LF1)&0xffff
-	sw	(r1),r2
-	jal	_printf
-	nop; delay slot nop
-	addi	r29,r29,#8
 	addi	r29,r29,#-8
 	add	r1,r0,r29
 	lw	r2,(r30)
-	addi	r3,r2,#1128
-	sw	(r1),r3
-	jal	_printHeap
-	nop; delay slot nop
-	addi	r29,r29,#8
-	addi	r29,r29,#-8
-	add	r1,r0,r29
-	lhi	r2,((LC13_LF1)>>16)&0xffff
-	addui	r2,r2,(LC13_LF1)&0xffff
 	sw	(r1),r2
-	jal	_printf
+	lw	r2,4(r30)
+	sw	4(r1),r2
+	jal	_malloc
 	nop; delay slot nop
 	addi	r29,r29,#8
-	lw	r1,-36(r30)
-	j	L83_LF1
+	add	r2,r0,r1
+	add	r1,r0,r2
+	j	L114_LF1
 	nop; delay slot nop
-L83_LF1:
+L114_LF1:
 	lw	r2,0(r29)
 	lw	r3,4(r29)
 	lw	r4,8(r29)

@@ -113,7 +113,7 @@ uint32 MemoryTranslateUserToSystem (PCB *pcb, uint32 addr)
 	}
 	page_number = addr >> MEM_L1FIELD_FIRST_BITNUM; //Extract Page_ Number by right shifting the virtual address
 	page_offset = addr & 0xFFF; //Last 12 Bits is Offset
-	
+
 	pte = pcb->pagetable[page_number]; //obtain entry from page table 
 
 	
@@ -333,78 +333,143 @@ void MemoryFreePage(uint32 page)
 
 //Question 5
 
+int get_Buddy_Index(int index, int order)
+{
+	int index_test = index; //Copy of the index
+	int buddy_index; //Buddy Node Index
+	int i; //Loop Control Variable
+	//We can see which index is the buddy index by using the fact that the even numbered indexes are paired with the right, and odd
+	//numbered indexes are paired with the left
+	for(i = 0; i < order; i++)
+	{
+		index_test = index_test / 2;
+	}	
+	if(index_test % 2 == 0) //Even
+	{
+		buddy_index = index + (1 << order);
+	}
+	else //Odd
+	{
+		buddy_index = index - (1 << order);
+	}
+	return buddy_index;	
+}
+
+void print_Coalesced_Nodes(Heap_Node * current, Heap_Node * buddy)
+{
+	uint32 free_address = (current->address < buddy->address) ? current->address : buddy->address;
+	
+	printf("Coalesced buddy nodes ");
+	
+	if(current->address < buddy->address)
+	{
+		printf("(order = %d, addr = %d, size = %d) & (order = %d, addr = %d, size = %d)\n"
+			, current->order, current->address, current->size, buddy->order, buddy->address, buddy->size);
+	}
+	else
+	{
+		printf("(order = %d, addr = %d, size = %d) & (order = %d, addr = %d, size = %d)\n"
+			, buddy->order, buddy->address, buddy->size, current->order, current->address, current->size);
+	}
+	
+	printf("into the parent node (order = %d, addr = %d, size = %d)\n", buddy->order + 1, free_address, current->size + buddy->size);
+
+}
+
+
+void Merge_Nodes(Heap_Node * heap, uint32 current_index)
+{	
+	uint32 buddy_index = get_Buddy_Index(current_index, heap[current_index].order);
+	uint32 index = current_index < buddy_index ? current_index: buddy_index; //Loop Control Variable
+	uint32 upper_Bound = heap[current_index].size + heap[buddy_index].size; //Upper Bound we have to set 
+	uint32 i;
+	
+	//Merged Node 
+	Heap_Node merged_Node;
+	merged_Node.size = heap[index].size * 2;
+	merged_Node.order = heap[index].order + 1;
+	merged_Node.address = heap[index].address;
+	merged_Node.occupied = false;
+
+	//Conditions where we should stop merging
+	if(heap[index].order == 7) //If our heap is at the max order
+	{
+		return;
+	}
+	else if(heap[buddy_index].occupied == true) //If the other heap has a used block
+	{
+		return;
+	}
+	else if(heap[buddy_index].size != heap[current_index].size) //If the sizes of the heaps are not equal
+	{
+		return;
+	}
+	
+	print_Coalesced_Nodes(&heap[current_index], &heap[buddy_index]);
+	for(i = index; i < (index + upper_Bound/32); i++)
+	{
+		heap[i] = merged_Node;
+	}
+	//Recursively Merge the Nodes again
+	Merge_Nodes(heap, index);
+}
+
+
 int mfree(PCB* pcb, void* ptr) 
 {
-	/*
-	int freeLocation = ((int) ptr & MEM_ADDRESS_OFFSET_MASK) >> HEAP_FIRST_BITNUM;
-	int freeOrder = pcb->heap[freeLocation] & HEAP_ORDER_MASK;
-	int parentStart = freeLocation;
-	int parentEnd = freeLocation + (1 << freeOrder);
-	int order = freeOrder;
-	int i;
+	int index = ((int) ptr - pcb->heapBaseAddr) / 32; //Obtain the heap location
+	int current_index = index; //Index of memory to free in the heap
+	int buddy_index; //Index of the buddy to the memory occupied
+	Heap_Node current_Node; //Node to Free
+	Heap_Node buddy_Node; //Buddy to Node to Free
+	int i; //Loop control Variable
+	uint32 Node_Order; //Order of the Node to free
+	uint32 bytes_freed;
+	Heap_Node * heap = pcb->Heap;
 
-	while(1)
+	if( !heap[current_index].occupied ) //If the chunk of memory was already free, return -1
 	{
-		if(order == freeOrder)
-		{
-			printf("Freed the block: order = %d, addr = %d, size = %d\n", order, parentStart << HEAP_FIRST_BITNUM, (1 << order) << HEAP_FIRST_BITNUM);
-		}
-		else
-		{
-			printf("Coalesced buddy nodes (order = %d, addr = %d, size = %d) & (order = %d, addr = %d, size = %d)\n",
-							order - 1, parentStart << HEAP_FIRST_BITNUM, (1 << (order - 1)) << HEAP_FIRST_BITNUM, 
-							order - 1, (parentStart + (1 << (order - 1))) << HEAP_FIRST_BITNUM, (1 << (order - 1)) <<HEAP_FIRST_BITNUM);
-			printf("into the parent node (order = %d, addr = %d, size = %d)\n",
-							order, parentStart << HEAP_FIRST_BITNUM, (1 << order) << HEAP_FIRST_BITNUM);
-		}
-
-		for(i = parentStart; i < parentEnd; ++i)
-		{
-			pcb->heap[i] = HEAP_ORDER_MASK & order;
-		}
-
-		parentStart = parentStart >> (order + 1) >> (order + 1);
-		parentEnd = parentStart + (1 << (order + 1));
-
-
-		if((pcb->heap[parentStart] & HEAP_BLOCK_USE_MASK) != 0)
-		{
-			break;
-		}
-		else if((pcb->heap[parentEnd - 1] & HEAP_BLOCK_USE_MASK) != 0)
-		{
-			break;
-		}
-		else if((pcb->heap[parentStart] & HEAP_ORDER_MASK) != order)
-		{
-			break;
-		}
-		else if((pcb->heap[parentEnd - 1] & HEAP_ORDER_MASK) != order)
-		{
-			break;
-		}	
-		order++;
-		if(order > MAX_HEAP_ORDER)
-		{
-			break;
-		}
+		return -1;
 	}
-*/
-	return 0;
+	
+	if(index < 0) //Invalid Pointer
+	{
+		return -1;
+	}
+
+	if(index > (MAX_HEAP_BLOCKS - 1)) //Invalid Pointer
+	{
+		return -1;
+	}
+
+
+	//Free the Current Node
+	current_Node = heap[current_index];
+	Node_Order = heap[current_index].order;
+	bytes_freed = current_Node.size;
+	for(i = current_index; i < (current_index + (1 << Node_Order)); i++)
+	{
+		heap[i].occupied = false;
+	}
+	printf("Freed the block: order = %d, addr = %d, size = %d\n", current_Node.order, current_Node.address, current_Node.size);
+	Merge_Nodes(heap, current_index);
+	return bytes_freed; //Return the number of bytes freed
+
 }
 
 
 void HeapInit(PCB * pcb)
 {
 	int i;
+	Heap_Node * heap = pcb->Heap;
 	for(i = 0; i < MAX_HEAP_BLOCKS; i++)
 	{
 		pcb->Heap[i].order = MAX_HEAP_ORDER; //Max order is 7 -> 4096
-		pcb->Heap[i].address = pcb->heapBaseAddr; //Each Heap has the same base address
+		pcb->Heap[i].address = 0x0; //The Heap's address always starts out at zero
 		pcb->Heap[i].size = 32 * (1 << MAX_HEAP_ORDER); //Size starts out as 4096
-		pcb->Heap[i].Buddy = &(pcb->Heap[i]); //No available buddies so it buddies up with itself
 		pcb->Heap[i].occupied = false; //Heap Node is open at first
 	}
+
 }
 
 void printHeap(Heap_Node * heap)
@@ -412,7 +477,7 @@ void printHeap(Heap_Node * heap)
 	int i = 0;
 	while(i < MAX_HEAP_BLOCKS)
 	{
-		printf("Index: %d Size: %d, ", i, heap[i].size);
+		printf("|Index: %d Size: %d Status: %d  |", i, heap[i].size, heap[i].occupied);
 		i = i + (1 << heap[i].order);
 	}
 	printf("\n");
@@ -427,7 +492,7 @@ void printBinary(uint32 n)
 	}
 }
 
-uint32 SplitNode(PCB * pcb, uint32 index, uint32 order, uint32 memsize)
+void SplitNode(PCB * pcb, uint32 index, uint32 order, uint32 memsize)
 {
 	Heap_Node * heap = pcb->Heap;
 	
@@ -449,11 +514,8 @@ uint32 SplitNode(PCB * pcb, uint32 index, uint32 order, uint32 memsize)
 	uint32 parent_address; //Address before splitting a node
 
 	
-	printf("Order is : %d \n", order);
-	printf("Current Order is: %d\n", heap[index].order);
-	printf("Split this Block %d times\n\n\n", times_split);
 	//Split the memory n number of times specified
-	for(i = 0; i < times_split; i++) //j variable keeps track of indexes needed to be set
+	for(i = 0; i < times_split; i++)
 	{
 		//Extract the parent Node information from the heap
 		parent_order = heap[index].order;
@@ -471,7 +533,7 @@ uint32 SplitNode(PCB * pcb, uint32 index, uint32 order, uint32 memsize)
 
 
 		second_half = index + (1 << half_order); //Second half of the block is at the beginning + order size
-		second_half_address = heap[index].address + 32 * (1 << half_order);	
+		second_half_address = heap[index].address + 32 * (1 << half_order); //Address is the base index address + size
 
 		//Set the left child
 		for(; first_half <  (index + (1 << half_order)); first_half++) //Loop through the first half of the block
@@ -506,24 +568,27 @@ uint32 SplitNode(PCB * pcb, uint32 index, uint32 order, uint32 memsize)
 
 	
 	}
-	
-	//Occupy the memory now
-	heap[index].occupied = true;
-	
-	return (pcb->heapBaseAddr + heap[index].address);
-} 
+}
 
+void printAllocation(uint32 order, uint32 address, uint32 memory_size, uint32 block_size)
+{
+	printf("Allocated the block: order = %d, addr = %d, requested mem size = %d, block size = %d\n", order, address, memory_size, block_size);	
+}
+
+void printHeapResult(uint32 size, uint32 virtual_address, uint32 physical_address)
+{
+		printf("Created a heap block of size %d bytes: virtual address %d, physical address %d\n", size, virtual_address, physical_address);		
+}
 void * malloc(PCB * pcb, int memsize)
 {
-	int i; //Loop Control Variable
-	int order = 0; //Order the memsize falls under
-	int mem_block = 32; //Our block of memory first starts off as order 0
-	int smallest_Order = MAX_HEAP_ORDER + 1, smallest_Order_index = -1; //Variable to keep track of smallest block to hold memory
+	uint32 i; //Loop Control Variable
+	uint32 order = 0; //Order the memsize falls under
+	uint32 mem_block = 32; //Our block of memory first starts off as order 0
+	uint32 smallest_Order = MAX_HEAP_ORDER + 1; 
+	uint32 smallest_Order_index = 0; //Variable to keep track of smallest block to hold memory
 	Heap_Node * heap = pcb->Heap; //Pointer to the PCB's heap	
-	uint32 memory_address;
-
-	printf("Heap Before: \n");
-	printHeap(pcb->Heap);
+	uint32 virtual_address; //Virtual Address of the Heap
+	uint32 physical_address; //Address in Memory
 
 	//Return null if memsize is less than zero or greater than the heap
 	if(memsize <= 0)
@@ -548,18 +613,23 @@ void * malloc(PCB * pcb, int memsize)
 		order++; //Increase the order as we double the block size	
 	}
 
-
-	
 	//In our first iteration, try finding the exact fit for our memory
 	for(i = 0; i < MAX_HEAP_BLOCKS; i += (1 << heap[i].order)) //Traverse the Heap, We can skip over indexes based on how large the order is
 	{
+		
 		if( !(heap[i].occupied) ) //If we find a slot that is both equal to the same order and it is not occupied occupy it
 		{
 			if(heap[i].order == order) //If the order is equal allocate that block
 			{
 				heap[i].occupied = true;
-				printf("Allocated the block: order = %d, addr = %d, requested mem size = %d, block size = %d\n", heap[i].order, heap[i].address, memsize, heap[i].size);
-				return (void *) (pcb->heapBaseAddr + (i << HEAP_FIRST_BITNUM));
+				printAllocation(heap[i].order, heap[i].address, memsize, heap[i].size);			
+				
+				virtual_address = pcb->heapBaseAddr + heap[i].address;
+				physical_address = MemoryTranslateUserToSystem(pcb, virtual_address);
+
+				printHeapResult(heap[i].size, virtual_address, physical_address);			
+							
+				return (void *) virtual_address;
 			}
 			else if(heap[i].order > order) //If the order can at least hold the block
 			{
@@ -577,76 +647,12 @@ void * malloc(PCB * pcb, int memsize)
 		return NULL;
 	}
 	
-	memory_address = SplitNode(pcb, smallest_Order_index, order, memsize);
-	printf("Heap After: \n");	
-	printHeap(pcb->Heap);
-	printf("\n\n\n");
-	return memory_address;
+	//Split the node 
+	//For some reason, if you print before the declaration of split Node a segmentation fault will occur	
+	SplitNode(pcb, smallest_Order_index, order, memsize);
+
+
+	//To combat this, I just recursively call malloc again so it hits the upper case. It has a max stack of 2, since we split the nodes early
+	return malloc(pcb, memsize);
+
 }
-/*	
-	//Find Block that is large enough to contain the requested memory (establish a lower bound)
-	i = 0;
-	while(i < MAX_HEAP_BLOCKS)
-	{
-		//3 Tests to pass
-		test1 = ((pcb->heap[i] & HEAP_BLOCK_USE_MASK) == 0); //If the entry is not in use
-		test2 = (pcb->heap[i] & HEAP_ORDER_MASK) >= order; //If the entry is greater than or equal to the order we requested
-		test3 = (pcb->heap[i] & HEAP_ORDER_MASK) < minOrder; //If the entry is less than the minimum
-		
-		if( (test1 & test2) & test3)
-		{
-			minOrder = (pcb->heap[i] & HEAP_ORDER_MASK);
-			minOrderLocation = i;
-		}		
-	
-
-		i = i + (1 << (pcb->heap[i] & HEAP_ORDER_MASK));
-	}
-
-	//Space is fully Occupied
-	if(minOrder == MAX_HEAP_ORDER + 1)
-	{
-		return NULL;
-	}
-
-	//Slice our memory block
-	while(minOrder >= order) 
-	{
-		//find upper location
-		upperBound = (1 << minOrder);
-		while(upperBound <= minOrderLocation)
-		{
-			upperBound = upperBound + (1 << minOrder);
-		}
-	
-		if(minOrder != order)
-		{
-			printf("Created a left child node (order = %d, addr = %d, size = %d) of parent (order = %d, addr = %d, size = %d)\n"
-			, minOrder - 1, minOrderLocation << HEAP_FIRST_BITNUM, (1 << (minOrder - 1)) << HEAP_FIRST_BITNUM
-			, minOrder, minOrderLocation << HEAP_FIRST_BITNUM, (1 << minOrder) << HEAP_FIRST_BITNUM);		
-
-			printf("Created a right child node (order = %d, addr = %d, size = %d) of parent (order = %d, addr = %d, size = %d)\n"
-			, minOrder - 1, minOrderLocation << HEAP_FIRST_BITNUM, (1 << (minOrder)) << HEAP_FIRST_BITNUM
-			, minOrder, minOrderLocation << HEAP_FIRST_BITNUM, (1 << minOrder) << HEAP_FIRST_BITNUM);
-		}
-		
-		for(i = minOrderLocation; i < upperBound; ++i)
-		{
-			//Slice The Tree
-			if(minOrder != order)
-			{
-				pcb->heap[i] = minOrder -1;
-			}	
-			else
-			{
-				pcb->heap[i] |= HEAP_BLOCK_USE_MASK;
-			}
-		}	
-		minOrder--;
-	}
-
-	printf("Allocated the block: order = %d, addr = %d, requested mem size = %d, block size = %d\n", order, minOrderLocation << HEAP_FIRST_BITNUM, memsize, (1 << order) << HEAP_FIRST_BITNUM);
-
-	return (void *) (pcb->heapBaseAddr + (minOrderLocation << HEAP_FIRST_BITNUM));
-
-*/

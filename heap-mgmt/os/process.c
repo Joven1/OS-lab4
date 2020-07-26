@@ -465,7 +465,7 @@ int ProcessFork (VoidFunc func, uint32 param, char *name, int isUser) {
 	else
 	{
 		pcb->pagetable[4] = page;
-		pcb->heapBaseAddr = 4 << MEM_L1FIELD_FIRST_BITNUM;	
+		pcb->heapBaseAddr = 4 * MEM_PAGESIZE;	
 		pcb->npages++;
 	}
 	
