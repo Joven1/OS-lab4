@@ -18,9 +18,9 @@ void main (int argc, char *argv[])
     int program;                        // used to figure out which program to run
 
 	int prog_A = 32;
-	int prog_B = 32;
-	int prog_C = 32;	
-	int prog_D = 32;
+	int prog_B = 100;
+	int prog_C = 1024;	
+	int prog_D = 128;
 
 
 	int * test_A;
