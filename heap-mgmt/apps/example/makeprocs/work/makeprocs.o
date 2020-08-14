@@ -103,57 +103,104 @@ _main:
 	sw	-8(r29),r31	; push ret addr
 	subui	r29,r29,#24	; alloc local storage
 	lw	r6,(r30)
-	lw	r7,4(r30)
+	lw	r11,4(r30)
 	jal	___main
 	nop	; not filled.
 	addi	r29,r29,#-8
-	addi	r8,r0,#32
-	sw	(r29),r8
+	addi	r12,r0,#32
+	sw	(r29),r12
 	jal	_malloc
 	nop	; not filled.
-	add	r2,r0,r1
-	sw	(r29),r8
+	add	r7,r0,r1
+	addi	r12,r0,#100
+	sw	(r29),r12
 	jal	_malloc
 	nop	; not filled.
-	add	r3,r0,r1
-	sw	(r29),r8
+	add	r8,r0,r1
+	addi	r12,r0,#1024
+	sw	(r29),r12
 	jal	_malloc
 	nop	; not filled.
-	add	r4,r0,r1
-	sw	(r29),r8
+	add	r9,r0,r1
+	addi	r12,r0,#128
+	sw	(r29),r12
 	jal	_malloc
 	nop	; not filled.
-	add	r5,r0,r1
-	lhi	r8,((LC0)>>16)&0xffff
-	addui	r8,r8,(LC0)&0xffff
-	sw	(r29),r8
+	add	r10,r0,r1
+	lhi	r5,((LC0)>>16)&0xffff
+	addui	r5,r5,(LC0)&0xffff
+	sw	(r29),r5
 	jal	_printf
 	nop	; not filled.
-	sw	(r29),r2
+	sw	(r29),r7
 	jal	_mfree
 	nop	; not filled.
-	lhi	r8,((LC1)>>16)&0xffff
-	addui	r8,r8,(LC1)&0xffff
-	sw	(r29),r8
+	lhi	r4,((LC1)>>16)&0xffff
+	addui	r4,r4,(LC1)&0xffff
+	sw	(r29),r4
 	jal	_printf
 	nop	; not filled.
+	sw	(r29),r8
+	jal	_mfree
+	nop	; not filled.
+	lhi	r3,((LC2)>>16)&0xffff
+	addui	r3,r3,(LC2)&0xffff
 	sw	(r29),r3
+	jal	_printf
+	nop	; not filled.
+	sw	(r29),r9
 	jal	_mfree
 	nop	; not filled.
-	lhi	r8,((LC2)>>16)&0xffff
-	addui	r8,r8,(LC2)&0xffff
-	sw	(r29),r8
+	lhi	r2,((LC3)>>16)&0xffff
+	addui	r2,r2,(LC3)&0xffff
+	sw	(r29),r2
 	jal	_printf
+	nop	; not filled.
+	sw	(r29),r10
+	jal	_mfree
+	nop	; not filled.
+	addi	r12,r0,#32
+	sw	(r29),r12
+	jal	_malloc
+	nop	; not filled.
+	add	r7,r0,r1
+	addi	r12,r0,#100
+	sw	(r29),r12
+	jal	_malloc
+	nop	; not filled.
+	add	r8,r0,r1
+	addi	r12,r0,#1024
+	sw	(r29),r12
+	jal	_malloc
+	nop	; not filled.
+	add	r9,r0,r1
+	addi	r12,r0,#128
+	sw	(r29),r12
+	jal	_malloc
+	nop	; not filled.
+	add	r10,r0,r1
+	sw	(r29),r5
+	jal	_printf
+	nop	; not filled.
+	sw	(r29),r7
+	jal	_mfree
 	nop	; not filled.
 	sw	(r29),r4
-	jal	_mfree
-	nop	; not filled.
-	lhi	r8,((LC3)>>16)&0xffff
-	addui	r8,r8,(LC3)&0xffff
-	sw	(r29),r8
 	jal	_printf
 	nop	; not filled.
-	sw	(r29),r5
+	sw	(r29),r8
+	jal	_mfree
+	nop	; not filled.
+	sw	(r29),r3
+	jal	_printf
+	nop	; not filled.
+	sw	(r29),r9
+	jal	_mfree
+	nop	; not filled.
+	sw	(r29),r2
+	jal	_printf
+	nop	; not filled.
+	sw	(r29),r10
 	jal	_mfree
 	nop	; not filled.
 	addi	r29,r29,#8
@@ -161,10 +208,10 @@ _main:
 	beqz	r1,L14
 	nop	; not filled.
 	addi	r29,r29,#-8
-	lhi	r8,((LC4)>>16)&0xffff
-	addui	r8,r8,(LC4)&0xffff
-	sw	(r29),r8
-	lw	r1,(r7)
+	lhi	r12,((LC4)>>16)&0xffff
+	addui	r12,r12,(LC4)&0xffff
+	sw	(r29),r12
+	lw	r1,(r11)
 	sw	4(r29),r1
 	jal	_Printf
 	nop	; not filled.
@@ -173,16 +220,16 @@ _main:
 	addi	r29,r29,#8
 L14:
 	addi	r29,r29,#-16
-	lw	r7,4(r7)
-	sw	(r29),r7
-	addi	r8,r0,#0
-	sw	4(r29),r8
-	addi	r8,r0,#10
-	sw	8(r29),r8
+	lw	r11,4(r11)
+	sw	(r29),r11
+	addi	r12,r0,#0
+	sw	4(r29),r12
+	addi	r12,r0,#10
+	sw	8(r29),r12
 	jal	_dstrtol
 	nop	; not filled.
-	addi	r8,r0,#0
-	sw	(r29),r8
+	addi	r12,r0,#0
+	sw	(r29),r12
 	jal	_sem_create
 	nop	; not filled.
 	add	r2,r0,r1
@@ -193,9 +240,9 @@ L14:
 	jal	_getpid
 	nop	; not filled.
 	addi	r29,r29,#-8
-	lhi	r8,((LC5)>>16)&0xffff
-	addui	r8,r8,(LC5)&0xffff
-	sw	(r29),r8
+	lhi	r12,((LC5)>>16)&0xffff
+	addui	r12,r12,(LC5)&0xffff
+	sw	(r29),r12
 	sw	4(r29),r1
 	jal	_Printf
 	nop	; not filled.
@@ -211,9 +258,9 @@ L15:
 	nop	; not filled.
 	jal	_getpid
 	nop	; not filled.
-	lhi	r8,((LC6)>>16)&0xffff
-	addui	r8,r8,(LC6)&0xffff
-	sw	(r29),r8
+	lhi	r12,((LC6)>>16)&0xffff
+	addui	r12,r12,(LC6)&0xffff
+	sw	(r29),r12
 	sw	4(r29),r1
 	jal	_Printf
 	nop	; not filled.
