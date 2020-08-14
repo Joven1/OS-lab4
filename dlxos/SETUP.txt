@@ -1,0 +1,17 @@
+Do as below to setup DLXOs at your home directory:
+(1) mkdir -p ~/ee469/dlxos
+(2) cp /home/shay/g/ee469/labs/common/dlxos.tar.gz ~/ee469/dlxos
+(3) cd ~/ee469/dlxos
+(4) gunzip dlxos.tar.gz
+(5) tar xvf dlxos.tar
+(6) add the below line at the end of your ~/.cshrc,
+    set path = (~/ee469/dlxos/bin $path)
+(7) type "source ~/.cshrc" at the prompt.
+
+    
+To compile,
+(1) type "make" at ~/ee469/dlxos/src/ directory
+
+
+To run,
+(1) type "dlxsim -x os.dlx.obj" at ~/ee469/dlxos/execs/ directory

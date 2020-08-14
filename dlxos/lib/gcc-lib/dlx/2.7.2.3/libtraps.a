@@ -1,0 +1,191 @@
+!<arch>
+trap_fileops.o/ 920143783   964   1     100600  1231      `
+;;;
+;;; Stub functions for DLX traps.
+;;;
+;;; Ethan L. Miller, 1999.  Released to the public domain.
+;;;
+;;; There are two sets of traps here.  The traps such as Open and Close
+;;; (note the capital letters) are for use by user programs.  The traps
+;;; with names such as open and close (lower case) are for use by the OS.
+;;;
+
+	.text
+	.align 2
+.proc _open
+.global _open
+_open:		
+	trap	#0x2013
+	jr	r31
+	nop
+.endproc _open
+
+.proc _close
+.global _close
+_close:		
+	trap	#0x2014
+	jr	r31
+	nop
+.endproc _close
+
+.proc _read
+.global _read
+_read:		
+	trap	#0x2010
+	jr	r31
+	nop
+.endproc _read
+
+.proc _write
+.global _write
+_write:		
+	trap	#0x2011
+	jr	r31
+	nop
+.endproc _write
+
+.proc _lseek
+.global _lseek
+_lseek:		
+	trap	#0x2012
+	jr	r31
+	nop
+.endproc _lseek
+
+;;; The following are the traps to be used by user-level programs
+;;;
+		.text
+	.align 2
+.proc _Open
+.global _Open
+_Open:		
+	trap	#0x213
+	jr	r31
+	nop
+.endproc _Open
+
+.proc _Close
+.global _Close
+_Close:		
+	trap	#0x214
+	jr	r31
+	nop
+.endproc _Close
+
+.proc _Read
+.global _Read
+_Read:		
+	trap	#0x210
+	jr	r31
+	nop
+.endproc _Read
+
+.proc _Write
+.global _Write
+_Write:		
+	trap	#0x211
+	jr	r31
+	nop
+.endproc _Write
+
+.proc _Lseek
+.global _Lseek
+_Lseek:		
+	trap	#0x212
+	jr	r31
+	nop
+.endproc _Lseek
+
+trap_printf.o/  920143832   964   1     100600  181       `
+;
+; Stub functions for DLX traps.
+;
+; Aaron Sawdey 1996; released to the Public Domain.
+;
+.text
+.proc _printf
+.global _printf
+_printf:		
+	trap	#0x2001
+	jr	r31
+	nop
+.endproc _printf
+
+trap_exit.o/    920143808   964   1     100600  719       `
+;;;
+;;; Stub functions for DLX traps.
+;;;
+;;; Ethan L. Miller, 1999.  Released to the public domain.
+;;;
+;;; There are two exit traps.  The first, _exitsim, actually exits the
+;;; simulator.  The second, _exit, simply calls a regular trap in the
+;;; DLX simulator, and would be suitable for a user program that wants
+;;; to signal the OS that it's exiting.
+;;;
+;;; IMPORTANT: all code that's run "native" on the simulator - OS code and
+;;; programs run without an OS - should call exitsim() rather than just
+;;; falling through to exit.
+;;;
+
+.text
+.align 2
+.proc _exitsim
+.global _exitsim
+_exitsim:
+	trap	#0x2f00
+	jr	r31
+	nop
+.endproc _exitsim
+
+.proc _exit
+.global _exit
+_exit:
+	trap	#0x300
+	jr	r31
+	nop
+.endproc _exit
+
+trap_random.o/  920143819   964   1     100600  280       `
+;
+; Stub functions for DLX traps.
+;
+; Aaron Sawdey 1996; released to the Public Domain.
+;
+.text
+.align 2
+.proc _random
+.global _random
+_random:		
+	trap	#0x2020
+	jr	r31
+	nop
+.endproc _random
+
+.proc _srandom
+.global _srandom
+_srandom:		
+	trap	#0x2021
+	jr	r31
+	nop
+.endproc _srandom
+.SYMTAB/        981573693   964   1     100600  208       `
+4
+trap_fileops.o
+	D _Close
+	D _lseek
+	D _close
+	D _open
+	D _Write
+	D _Open
+	D _write
+	D _read
+	D _Read
+	D _Lseek
+trap_printf.o
+	D _printf
+trap_exit.o
+	D _exitsim
+	D _exit
+trap_random.o
+	D _random
+	D _srandom

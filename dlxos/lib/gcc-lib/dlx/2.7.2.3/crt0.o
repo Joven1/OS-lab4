@@ -1,0 +1,21 @@
+;;; Ethan L. Miller, 1999.  Released to the public domain
+;;;
+;;; Most of the traps are called in files from libtraps.
+
+.text
+.align 2
+.proc _exit
+.global _exit
+_exit:
+	trap	#0x300
+	jr	r31
+	nop
+.endproc _exit
+
+; for the benefit of gcc.
+.proc ___main
+.global ___main
+___main:
+	jr	r31
+	nop
+.endproc ___main

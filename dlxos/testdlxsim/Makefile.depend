@@ -1,0 +1,2 @@
+dlxsim.o: dlxsim.cc dlx.h
+dlxsupport.o: dlxsupport.cc dlx.h

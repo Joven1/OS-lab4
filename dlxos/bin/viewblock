@@ -1,0 +1,4 @@
+#!/bin/bash
+LN1=`expr $1 "*" 32`
+LN1=`expr $LN1 + 32`
+cat FileSystem.dlxos|binviewer|head -$LN1|tail -32

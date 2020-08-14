@@ -1,0 +1,4 @@
+#! /bin/bash
+
+stty brkint icrnl ixon tab0 isig icanon echo
+

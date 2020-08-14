@@ -1,0 +1,28 @@
+/* Script for -N: mix text and data on same page; don't align data */
+OUTPUT_FORMAT("elf32-dlx", "",
+	      "")
+OUTPUT_ARCH(dlx)
+SEARCH_DIR("/home/shay/g/ee469/experimental/NewEE469/objs/dlx-elf/lib");
+SECTIONS
+{
+  . = 0;
+  .text :
+  {
+    CREATE_OBJECT_SYMBOLS
+    *(.text)
+    etext = .;
+  }
+  . = .;
+  .data :
+  {
+    *(.data)
+    CONSTRUCTORS
+    edata  =  .;
+  }
+  .bss :
+  {
+   *(.bss)
+   *(COMMON)
+   end = . ;
+  }
+}
