@@ -22,5 +22,7 @@ void main (int argc, char *argv[])
     Exit();
   }
 
+	fork();
   Printf("hello_world (%d): Done!\n", getpid());
+	
 }

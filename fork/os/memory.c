@@ -380,14 +380,15 @@ void Memory_ROP_ACCESS_handler(PCB * pcb)
 	uint32 faultAddress_page = faultAddress >> MEM_L1FIELD_FIRST_BITNUM;
 	uint32 parent_page = (pcb->pagetable[faultAddress_page] & MEM_MASK_PTE_TO_PAGE_ADDRESS) >> MEM_L1FIELD_FIRST_BITNUM;
 	uint32 page;
-
+	
+	printf("Running ROP Access Handler!\n\n\n");
 	if(reference_counter[parent_page] > 1) //If there is more than one process using this page
 	{
 		//Copy the page byte-by-byte to a new page and replace with new pte
 		page = MemoryAllocPage();
 		pcb->pagetable[faultAddress_page] = MemorySetupPte(page);
 		bcopy((char *) (faultAddress), (char *) (page * MEM_PAGESIZE), MEM_PAGESIZE);
-		reference_counter[parent_page]--;				
+		reference_counter[parent_page]--;
 	}
 	else
 	{

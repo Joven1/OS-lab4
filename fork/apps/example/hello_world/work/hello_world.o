@@ -148,6 +148,8 @@ L17:
 	nop	; not filled.
 	addi	r29,r29,#16
 L18:
+	jal	_fork
+	nop	; not filled.
 	jal	_getpid
 	nop	; not filled.
 	addi	r29,r29,#-8

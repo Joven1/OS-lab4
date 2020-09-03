@@ -1,7 +1,7 @@
 ; Linked by DLX-LD.
 ; MemSize 24576
 ; Data size: 169
-; Text size: 4348
+; Text size: 4368
 ; Stack size: 8192
 .text 0x1000
 .data 0x3000
@@ -155,6 +155,8 @@ L17_LF0:
 	nop; not filled.
 	addi	r29,r29,#16
 L18_LF0:
+	jal	_fork
+	nop; not filled.
 	jal	_getpid
 	nop; not filled.
 	addi	r29,r29,#-8
@@ -243,6 +245,14 @@ _Printf:
 	jr	r31
 	nop
 .endproc _Printf
+
+.proc _fork
+.global _fork
+_fork:
+	trap	#0x430
+	jr	r31
+	nop
+.endproc _fork
 
 .proc _getpid
 .global _getpid

@@ -4,4 +4,4 @@ default:
 clean:
 	cd makeprocs; make clean
 run:
-	cd ../../bin; dlxsim -x os.dlx.obj -a -u makeprocs.dlx.obj 8; ee469_fixterminal
+	cd ../../bin; dlxsim -x os.dlx.obj -a -u makeprocs.dlx.obj 4; ee469_fixterminal
